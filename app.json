@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Kurius",
+    "slug": "kurius",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "kurius",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kurius.app"
+    },
+    "android": {
+      "package": "com.kurius.app",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "./plugins/withFixedAppDelegate.js",
+      "expo-router",
+      "expo-font",
+      "expo-web-browser",
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bdde34c3-1bda-44c5-8c9f-17a60ecddfd4"
+      }
+    },
+    "owner": "alexandre_sanchez"
+  }
+}
