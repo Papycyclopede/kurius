@@ -1,6 +1,7 @@
 // app/(tabs)/profile.tsx
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Switch, Image } from 'react-native'; // Ajout de 'Image'
-import { LogOut, UserPlus, Mail, Star, Users as UsersIcon, Circle as CircleIcon } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Switch, Image, Linking, Alert, TouchableOpacity } from 'react-native';
+import { LogOut, UserPlus, Mail, Star, Users as UsersIcon, Circle as CircleIcon, Lock } from 'lucide-react-native';
+// CORRECTION: Importation nommée
 import { useAuth } from '@/contexts/AuthContext';
 import CozyButton from '@/components/CozyButton';
 import LanguageSelector from '@/components/LanguageSelector';
@@ -11,6 +12,7 @@ import React from 'react';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '@/constants/Theme';
+import { BlurView } from 'expo-blur';
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
@@ -18,7 +20,14 @@ export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
-  const handleSignOut = async () => { await signOut(); router.replace('/'); };
+  const handleSignOut = async () => { 
+    await signOut(); 
+    router.replace('/'); 
+  };
+
+  const handleOpenQlooLink = () => {
+    Linking.openURL('https://www.qloo.com').catch(err => Alert.alert("Erreur", "Impossible d'ouvrir le lien Qloo."));
+  };
 
   const HEADER_HEIGHT_APPROX = 60; 
   const paddingTopForContent = insets.top + HEADER_HEIGHT_APPROX;
@@ -32,7 +41,7 @@ export default function ProfileScreen() {
   }
 
   if (!user) {
-    return (
+     return (
       <BackgroundWrapper backgroundImage={require('@/assets/images/profil.png')} noOverlay={true}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>{t('auth.signIn.noAccount')}</Text>
@@ -53,7 +62,7 @@ export default function ProfileScreen() {
         <View style={styles.content}>
 
           <CozyCard style={[styles.welcomeCard, styles.cardColor1]}>
-            <Text style={styles.welcomeText}>{t('home.welcome', { name: user.email || 'Ami Kurius' })}</Text>
+            <Text style={styles.welcomeText}>{t('home.welcome', { name: user?.user_metadata.full_name || 'Ami Kurius' })}</Text>
             <Text style={styles.welcomeSubtitle}>{t('profile.account_settings')}</Text>
           </CozyCard>
 
@@ -75,53 +84,65 @@ export default function ProfileScreen() {
             />
           </CozyCard>
 
-          <CozyCard style={styles.cardColor2}>
-            <Text style={styles.sectionTitle}>{t('profile.friendsCircleTitle')}</Text>
-            <View style={styles.friendsActions}>
-                <CozyButton 
-                  style={[styles.friendButton, { backgroundColor: theme.colors.cardPastels[0] }]} 
-                  onPress={() => router.push('/circles')} 
-                  icon={<CircleIcon size={16} />} 
-                  variant="secondary"
-                >
-                    {t('profile.manageCircles')}
-                </CozyButton>
-                <CozyButton 
-                  style={[styles.friendButton, { backgroundColor: theme.colors.cardPastels[1] }]} 
-                  onPress={() => router.push('/friends/list')} 
-                  icon={<UsersIcon size={16} />} 
-                  variant="secondary"
-                >
-                    {t('profile.myFriends')}
-                </CozyButton>
-                <CozyButton 
-                  style={[styles.friendButton, { backgroundColor: theme.colors.cardPastels[2] }]} 
-                  onPress={() => router.push('/friends/search')} 
-                  icon={<UserPlus size={16} />} 
-                  variant="secondary"
-                >
-                    {t('profile.findFriends')}
-                </CozyButton>
-                <CozyButton 
-                  style={[styles.friendButton, { backgroundColor: theme.colors.cardPastels[3] }]} 
-                  onPress={() => router.push('/friends/requests')} 
-                  icon={<Mail size={16} />} 
-                  variant="secondary"
-                >
-                    {t('profile.pendingRequests')}
-                </CozyButton>
+          <View>
+            <CozyCard style={styles.cardColor2}>
+              <Text style={styles.sectionTitle}>{t('profile.friendsCircleTitle')}</Text>
+              <View style={styles.friendsActions}>
+                  <CozyButton 
+                    style={[styles.friendButton, { backgroundColor: theme.colors.cardPastels[0] }]} 
+                    onPress={() => router.push('/circles')} 
+                    icon={<CircleIcon size={16} />} 
+                    variant="secondary"
+                  >
+                      {t('profile.manageCircles')}
+                  </CozyButton>
+                  <CozyButton 
+                    style={[styles.friendButton, { backgroundColor: theme.colors.cardPastels[1] }]} 
+                    onPress={() => router.push('/friends/list')} 
+                    icon={<UsersIcon size={16} />} 
+                    variant="secondary"
+                  >
+                      {t('profile.myFriends')}
+                  </CozyButton>
+                  <CozyButton 
+                    style={[styles.friendButton, { backgroundColor: theme.colors.cardPastels[2] }]} 
+                    onPress={() => router.push('/friends/search')} 
+                    icon={<UserPlus size={16} />} 
+                    variant="secondary"
+                  >
+                      {t('profile.findFriends')}
+                  </CozyButton>
+                  <CozyButton 
+                    style={[styles.friendButton, { backgroundColor: theme.colors.cardPastels[3] }]} 
+                    onPress={() => router.push('/friends/requests')} 
+                    icon={<Mail size={16} />} 
+                    variant="secondary"
+                  >
+                      {t('profile.pendingRequests')}
+                  </CozyButton>
+              </View>
+            </CozyCard>
+            
+            <View style={styles.wipOverlayContainer}>
+                <BlurView intensity={10} tint="light" style={StyleSheet.absoluteFill} />
+                <View style={styles.wipContent}>
+                    <Lock size={24} color={theme.colors.textDark} />
+                    <Text style={styles.wipText}>{t('profile.workInProgress')}</Text>
+                </View>
             </View>
-          </CozyCard>
+          </View>
+
 
           <CozyCard>
             <LanguageSelector />
           </CozyCard>
 
-          {/* ### MODIFICATION : Ajout de la section "Powered by Qloo" ### */}
-          <CozyCard style={styles.qlooCard}>
-            <Text style={styles.qlooText}>Powered by</Text>
-            <Image source={require('@/assets/images/qloo.png')} style={styles.qlooLogo} />
-          </CozyCard>
+          <TouchableOpacity onPress={handleOpenQlooLink}>
+            <CozyCard style={styles.qlooCard}>
+              <Text style={styles.qlooText}>Powered by</Text>
+              <Image source={require('@/assets/images/qloo.png')} style={styles.qlooLogo} />
+            </CozyCard>
+          </TouchableOpacity>
 
           <View style={styles.signOutContainer}>
             <CozyButton onPress={handleSignOut} icon={<LogOut size={16} />} variant="ghost" style={{borderColor: theme.colors.error}}>{t('profile.signOut')}</CozyButton>
@@ -218,16 +239,15 @@ const styles = StyleSheet.create({
   premiumSwitch: {
     alignSelf: 'flex-start'
   },
-  // ### MODIFICATION : Ajout des styles pour la carte Qloo ###
   qlooCard: {
-    backgroundColor: '#1A1A1A', // Un noir un peu plus doux que #000
+    backgroundColor: '#1A1A1A',
     alignItems: 'center',
     paddingVertical: 20,
     marginTop: 20,
   },
   qlooText: {
     ...theme.fonts.caption,
-    color: '#A0A0A0', // Un gris clair pour une bonne lisibilité
+    color: '#A0A0A0',
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -237,5 +257,23 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: 'contain',
     marginTop: 8,
+  },
+  wipOverlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: theme.sizing.borderRadiusCard,
+    overflow: 'hidden',
+    zIndex: 10,
+  },
+  wipContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  wipText: {
+    ...theme.fonts.subtitle,
+    color: theme.colors.textDark,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
 });

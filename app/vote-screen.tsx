@@ -19,7 +19,7 @@ export default function ChoiceScreen() {
   const router = useRouter();
   const { recommendations: rawRecommendations, participants: rawParticipants, category: rawCategory } = useLocalSearchParams();
   const { t } = useTranslation();
-  const { isPremium } = useAuth();
+  const { isPremium } = useAuth(); // Récupérer isPremium ici
   
   const [recommendations, setRecommendations] = useState<EnrichedRecommendation[]>([]);
   const [participants, setParticipants] = useState<string[]>([]);
@@ -31,11 +31,8 @@ export default function ChoiceScreen() {
     if (rawCategory && typeof rawCategory === 'string') setCategory(rawCategory);
   }, [rawRecommendations, rawParticipants, rawCategory]);
 
-  // ### MODIFICATION : Ajout de ce bloc pour arrêter le son ###
-  // Ce code s'exécute quand on quitte l'écran.
   useFocusEffect(
-    useCallback(() => {
-      // La fonction de retour est la fonction de "nettoyage"
+    React.useCallback(() => {
       return () => {
         voiceService.stop();
       };
@@ -64,6 +61,9 @@ export default function ChoiceScreen() {
   const handleRefreshRecommendations = async () => {
     await voiceService.stop();
     // Votre logique de rafraîchissement
+    // Pour une démo, vous pourriez re-générer des recommandations ici
+    // en appelant recommendationService.generateRecommendations
+    // avec les mêmes paramètres, ou en simulant un rafraîchissement.
   };
 
   return (
@@ -88,11 +88,12 @@ export default function ChoiceScreen() {
                 </View>
               </View>
 
-              {(isPremium || index === 0) ? (
+              {(isPremium || index === 0) ? ( // Le premier élément a toujours l'explication IA
                 <CozyCard transparent style={styles.geminiCard}>
                   <View style={styles.geminiHeader}>
                     <Text style={styles.geminiTitle}>{t('vote.whyChoice')}</Text>
-                    <TouchableOpacity onPress={() => voiceService.playText(rec.geminiExplanation)}>
+                    {/* Passer isPremium à voiceService.playText */}
+                    <TouchableOpacity onPress={() => voiceService.playText(rec.geminiExplanation, isPremium)}>
                       <Volume2 size={20} color={theme.colors.textLight} />
                     </TouchableOpacity>
                   </View>
@@ -103,7 +104,7 @@ export default function ChoiceScreen() {
                   <CozyCard style={styles.upsellCard}>
                       <StarIcon size={16} color="#B28A00" />
                       <Text style={styles.upsellText}>
-                          Débloquez l'avis de Kurius avec Premium
+                          {t('vote.unlockWithPremium')}
                       </Text>
                   </CozyCard>
                 </TouchableOpacity>

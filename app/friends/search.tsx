@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { notificationService } from '@/services/notificationService';
 import { theme } from '@/constants/Theme';
+import { useTranslation } from 'react-i18next';
 
 interface FoundUser {
   id: string;
@@ -20,6 +21,7 @@ interface FoundUser {
 export default function SearchFriendsScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<FoundUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,8 +36,6 @@ export default function SearchFriendsScreen() {
     setLoading(true);
     setHasSearched(true);
     
-    // On utilise une fonction RPC de Supabase pour chercher les utilisateurs
-    // et exclure l'utilisateur actuel des résultats.
     const { data, error } = await supabase.rpc('search_users', { 
       search_term: query.trim().toLowerCase(),
       current_user_id: user.id 
@@ -44,7 +44,7 @@ export default function SearchFriendsScreen() {
     setLoading(false);
 
     if (error) {
-      notificationService.showError("Erreur", "La recherche d'utilisateurs a échoué.");
+      notificationService.showError(t('common.error'), "La recherche d'utilisateurs a échoué.");
       console.error(error);
     } else {
       setResults(data || []);
@@ -63,15 +63,14 @@ export default function SearchFriendsScreen() {
       });
 
     if (error) {
-      if (error.code === '23505') { // Code pour violation de contrainte unique
+      if (error.code === '23505') {
         notificationService.showInfo("Déjà fait !", "Une demande d'ami est déjà en cours ou vous êtes déjà amis.");
       } else {
-        notificationService.showError("Erreur", "Impossible d'envoyer la demande d'ami.");
+        notificationService.showError(t('common.error'), t('friends.requests.errorSend'));
         console.error(error);
       }
     } else {
-      notificationService.showSuccess("Succès", "Demande d'ami envoyée !");
-      // On retire l'utilisateur de la liste des résultats pour ne pas l'ajouter 2x
+      notificationService.showSuccess(t('common.success'), "Demande d'ami envoyée !");
       setResults(currentResults => currentResults.filter(r => r.id !== receiverId));
     }
   };
@@ -80,8 +79,8 @@ export default function SearchFriendsScreen() {
     <BackgroundWrapper>
       <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
         <View style={styles.header}>
-            <Text style={styles.title}>Trouver des amis</Text>
-            <Text style={styles.subtitle}>Recherchez par nom complet ou par email.</Text>
+            <Text style={styles.title}>{t('friends.search.title')}</Text>
+            <Text style={styles.subtitle}>{t('friends.search.subtitle')}</Text>
         </View>
         
         <CozyCard>
@@ -89,7 +88,7 @@ export default function SearchFriendsScreen() {
                 <Search size={20} color={theme.colors.textLight} style={styles.inputIcon} />
                 <TextInput
                     style={styles.input}
-                    placeholder="Nom ou email..."
+                    placeholder={t('friends.search.placeholder')}
                     value={query}
                     onChangeText={setQuery}
                     onSubmitEditing={handleSearch}
@@ -98,7 +97,7 @@ export default function SearchFriendsScreen() {
                 />
             </View>
             <CozyButton onPress={handleSearch} disabled={loading}>
-                {loading ? "Recherche..." : "Rechercher"}
+                {loading ? t('friends.search.buttonLoading') : t('friends.search.button')}
             </CozyButton>
         </CozyCard>
 
@@ -127,7 +126,7 @@ export default function SearchFriendsScreen() {
                 ListEmptyComponent={
                     hasSearched && results.length === 0 ? (
                         <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>Aucun utilisateur trouvé pour "{query}".</Text>
+                            <Text style={styles.emptyText}>{t('friends.search.noResults', { query })}</Text>
                         </View>
                     ) : null
                 }

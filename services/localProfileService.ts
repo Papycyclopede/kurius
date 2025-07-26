@@ -9,10 +9,11 @@ const STORAGE_KEY = 'KURIUS_LOCAL_PROFILES';
 export interface LocalProfile {
   id: string;
   name: string;
-  avatarUri: string | null; 
+  avatarUri: string | null;
   films: FavoriteFilm[];
   books: FavoriteBook[];
-  tvShows: FavoriteTvShow[]; // 'recipes' a été remplacé par 'tvShows'
+  tvShows: FavoriteTvShow[];
+  ageRange?: 'child' | 'teen' | 'adult'; // CHAMP AJOUTÉ
 }
 
 export const getLocalProfiles = async (): Promise<LocalProfile[]> => {
@@ -47,7 +48,7 @@ export const saveOrUpdateProfile = async (profile: Partial<LocalProfile>): Promi
             avatarUri: null,
             films: [],
             books: [],
-            tvShows: [], // On initialise aussi pour les nouveaux profils
+            tvShows: [],
             ...profile
         };
         profiles.push(newProfile);

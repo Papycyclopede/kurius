@@ -24,11 +24,11 @@
   "auth": {
     "signIn": {
       "title": "Welcome back!",
-      "subtitle": "Reconnect to your cultural cocoon",
+      "subtitle": "Log back into your cultural cocoon",
       "emailPlaceholder": "Your email",
       "passwordPlaceholder": "Your password",
       "signInButton": "Sign In",
-      "signInButtonLoading": "Signing in...",
+      "signInButtonLoading": "Signing In...",
       "noAccount": "Don't have an account yet?",
       "createAccount": "Create an account",
       "demoButton": "Jury Access (Demo Mode)",
@@ -39,7 +39,7 @@
     },
     "signUp": {
       "title": "Join Kurius!",
-      "subtitle": "Create your family cultural cocoon",
+      "subtitle": "Create your family's cultural cocoon",
       "fullNamePlaceholder": "Your full name",
       "emailPlaceholder": "Your email",
       "passwordPlaceholder": "Password (min. 6 characters)",
@@ -50,11 +50,11 @@
       "signIn": "Sign In",
       "success": {
         "title": "Check your email!",
-        "message": "We've sent a 6-digit code to activate your account.",
+        "message": "We've sent you a 6-digit code to activate your account.",
         "understood": "Got it!"
       },
       "errors": {
-        "emptyFields": "Please fill all fields to join the Kurius family",
+        "emptyFields": "Please fill in all fields to join the Kurius family",
         "passwordMismatch": "The passwords do not match",
         "passwordTooShort": "Your password must be at least 6 characters long",
         "emailExists": "This email address is already in use",
@@ -69,9 +69,9 @@
       "buttonLoading": "Verifying...",
       "successTitle": "Account activated!",
       "successMessage": "Your account is now active. You can now sign in.",
-      "successButton": "Go to Sign In",
+      "successButton": "Go to sign in",
       "errorTitle": "Invalid code",
-      "errorMessage": "The provided code is incorrect or has expired. ({{message}})"
+      "errorMessage": "The code provided is incorrect or has expired. ({{message}})"
     }
   },
   "navigation": {
@@ -79,31 +79,31 @@
     "create": "Create",
     "memories": "Memories",
     "profile": "My Profile",
-    "plus_tab_title": "Plus"
+    "plus_tab_title": "Kurius Plus"
   },
   "home": {
     "welcome": "Hello {{name}}!",
     "title": "Welcome to your cultural cocoon",
     "createButton": "Create a Kurius Activity",
-    "manageProfilesButton": "Manage Profiles",
+    "manageProfilesButton": "Manage profiles",
     "circlesSectionTitle": "My Family Circle",
     "members": "{{count}} member",
     "members_plural": "{{count}} members",
-    "kuriusWelcome": "Hello! Ready to explore new horizons? Tell me about a story that transported you!",
+    "kuriusWelcome": "Hi there! Ready to explore new horizons? Tell me about a story that transported you!",
     "kuriusPlaceholder": "Talk to Kurius..."
   },
   "createEvent": {
     "dialogue": {
-      "step0_premium": "Hello! Ready to create a new memory? First, tell me who you want to share it with.",
+      "step0_premium": "Hello! Ready to create a new memory? First, tell me who you'd like to share it with.",
       "step1": "What a beautiful day for an activity! What would you like to do?",
-      "step2": "Excellent choice! Who will be lucky enough to participate?",
+      "step2": "Excellent choice! Who will be lucky enough to join this moment?",
       "step3_refine": "Great! Now, tell me more about what you're looking for. Tell me about genres, themes, or even works you've loved.",
-      "step4_generate": "Perfect! Everything is ready. I'll go find the ideal activity for you...",
+      "step4_generate": "Perfect! Everything is ready. I'll find the ideal activity for you...",
       "continueButton": "Continue",
-      "refine_placeholder": "Ex: 'A light horror movie', 'A dystopian sci-fi book', 'A comedy series that makes everyone laugh'...",
+      "refine_placeholder": "e.g., 'A light horror movie', 'A dystopian sci-fi book', 'A comedy series that makes everyone laugh'...",
       "skip_refine_button": "Skip this step"
     },
-    "generateButton": "Create the magic",
+    "generateButton": "Start the magic",
     "generateButtonLoading": "Magic in progress...",
     "loadingMessage": "Kurius is analyzing your tastes...",
     "categories": {
@@ -113,19 +113,19 @@
     },
     "errors": {
       "categoryRequired": "Please choose an activity category.",
-      "noParticipants": "Please choose at least one participant.",
-      "generationError": "Kurius could not generate recommendations."
+      "noParticipants": "Please select at least one participant.",
+      "generationError": "Kurius was unable to generate recommendations."
     },
     "typeSelection": {
-      "localCircle": "My Family Circle",
-      "sharedCircles": "Shared Friend Circles"
+      "localCircle": "My Local Circle",
+      "sharedCircles": "Shared Friends Circles"
     }
   },
   "manageProfiles": {
     "addProfileButton": "Add a profile",
     "noTaste": "No {{category}}",
     "empty": {
-      "title": "No local profiles.",
+      "title": "No local profiles yet.",
       "subtitle": "Click on \"Add a profile\" to get started!"
     },
     "deleteConfirm": {
@@ -136,18 +136,19 @@
       "nameRequired": "The name is required."
     },
     "form": {
-      "editTitle": "Edit profile",
-      "newTitle": "New profile",
+      "editTitle": "Edit Profile",
+      "newTitle": "New Profile",
       "choosePhoto": "Choose a photo",
-      "namePlaceholder": "Member's name"
+      "namePlaceholder": "Member's name",
+      "newProfileDefaultName": "New Member"
     }
   },
   "profile": {
     "title": "My Profile",
-    "description": "Your cultural profile helps Kurius suggest works adapted to your tastes and those of your group.",
+    "description": "Your cultural profile helps Kurius suggest works that match your and your group's tastes.",
     "culturalTastes": "My Cultural Tastes",
     "categories": {
-      "films": "Favorite Films",
+      "films": "Favorite Movies",
       "books": "Favorite Books",
       "tvShows": "Favorite TV Shows"
     },
@@ -155,23 +156,27 @@
     "saveSuccessMessage": "Your profile has been updated.",
     "saveErrorTitle": "Save Error",
     "saveErrorMessage": "An issue occurred:",
-    "account_settings": "Account settings",
+    "account_settings": "Account Settings",
     "friendsCircleTitle": "Friends & Circles",
     "manageCircles": "Manage Circles",
     "myFriends": "My Friends",
     "findFriends": "Find Friends",
     "pendingRequests": "Pending Requests",
     "premiumTitle": "Jury / Premium Mode",
-    "premiumDescription": "Activate this mode to simulate the Kurius Premium experience (AI explanations, voice, etc.)"
+    "premiumDescription": "Activate this mode to simulate the Kurius Premium experience (AI explanations, voice, etc.)",
+    "workInProgress": "Feature currently in development"
   },
   "friends": {
+    "list": {
+      "title": "My Friends"
+    },
     "search": {
       "title": "Find Friends",
-      "subtitle": "Search by unique username.",
-      "placeholder": "Username...",
+      "subtitle": "Search by full name or email.",
+      "placeholder": "Name or email...",
       "button": "Search",
       "buttonLoading": "Searching...",
-      "noResults": "No user found for \"{{query}}\"",
+      "noResults": "No users found for \"{{query}}\"",
       "addFriendButton": "Add"
     },
     "requests": {
@@ -180,10 +185,49 @@
       "acceptButton": "Accept",
       "declineButton": "Decline",
       "successAdd": "Friend added!",
-      "errorAccept": "Failed to accept request.",
-      "errorDecline": "Failed to decline request.",
-      "errorSend": "Failed to send friend request.",
+      "errorAccept": "Could not accept the request.",
+      "errorDecline": "Could not decline the request.",
+      "errorSend": "Could not send the friend request.",
       "errorAlreadyPending": "A friend request is already pending with this user."
+    }
+  },
+  "circles": {
+    "list": {
+        "title": "My Circles",
+        "emptyTitle": "You don't have any circles yet.",
+        "emptyButton": "Create my first circle",
+        "addCircleButton": "Create a circle",
+        "circleName": "Circle name",
+        "circleDescription": "Description (optional)"
+    },
+    "create": {
+        "title": "Create a new circle",
+        "nameLabel": "Circle Name",
+        "namePlaceholder": "e.g., Movie Nights, Book Club...",
+        "descriptionLabel": "Description (optional)",
+        "descriptionPlaceholder": "A short description for your circle",
+        "createButton": "Create Circle",
+        "creatingButton": "Creating...",
+        "errors": {
+            "nameTooShort": "The circle name must be at least 3 characters long.",
+            "creationFailed": "Failed to create the circle."
+        },
+        "success": "Circle created successfully!"
+    },
+    "inviteModal": {
+        "title": "Invite Friends",
+        "emptyText": "All your friends are already in this circle!",
+        "inviteButton": "Invite ({{count}})"
+    },
+    "details": {
+        "title": "Circle Details",
+        "membersTitle": "Members",
+        "inviteButton": "Invite Members",
+        "leaveButton": "Leave Circle",
+        "deleteButton": "Delete Circle",
+        "noMembers": "No members in this circle yet.",
+        "pendingInvitations": "Pending Invitations",
+        "noPendingInvitations": "No pending invitations."
     }
   },
   "memories": {
@@ -194,8 +238,8 @@
       "subtitle": "Create a new activity to get started!"
     },
     "reset": {
-      "confirmTitle": "Reset History?",
-      "confirmMessage": "All your memories will be permanently deleted. This action cannot be undone.",
+      "confirmTitle": "Reset history?",
+      "confirmMessage": "All your memories will be permanently deleted. This action is irreversible.",
       "confirmButton": "Reset"
     }
   },
@@ -203,17 +247,27 @@
     "title": "Make your choice",
     "subtitle": "Which activity will you share?",
     "whyChoice": "Kurius's Take",
-    "chooseButton": "Choose this one"
+    "chooseButton": "Choose this one",
+    "unlockWithPremium": "Unlock Kurius's take with Premium"
   },
-  "result": {
-    "title": "Your choice is made!",
-    "subtitle": "Here is the activity you will share.",
-    "geminiTitle": "Kurius's Take",
-    "backButton": "Back to Home",
-    "loading": "Loading result..."
-  },
+"result": {
+  "title": "Your choice is made!",
+  "subtitle": "Here is the activity you will share.",
+  "geminiTitle": "Kurius's Take",
+  "backButton": "Back to Home",
+  "loading": "Loading result...",
+  "streamOn": "Stream on",
+  "rentFrom": "Rent on",
+  "buyFrom": "Buy on",
+  "moreProviders": "See more platforms",
+  "buyBook": "Buy the book",
+  "noStreamLinkAvailable": "No streaming/purchase links available for {{region}}.",
+  "noBuyLinkAvailable": "No purchase link available for this book.",
+  "noLinkAvailable": "No link available.",
+  "unlockOpinion": "Upgrade to Kurius Premium to discover the AI's opinion!"
+},
   "language": {
-    "title": "Language",
+    "title": "Language / Langue",
     "french": "Français",
     "english": "English"
   },
@@ -228,20 +282,66 @@
     },
     "tvShow": {
       "title": "Search for a TV show",
-      "placeholder": "Ex: Game of Thrones, Friends..."
+      "placeholder": "e.g., Game of Thrones, Friends..."
     },
-    "noResults": "No results for \"{{query}}\""
+    "noResults": "No results for \"{{query}}\"",
+    "unknownAuthor": "Unknown author",
+    "unknownDate": "Unknown date",
+    "firstAirDate": "First aired"
   },
   "plus": {
     "title": "Kurius Plus",
     "subtitle": "Unlock the full potential of your cultural cocoon.",
-    "feature1_title": "Shared Friend Circles",
+    "feature1_title": "Shared Friends Circles",
     "feature1_description": "Invite other users, create events, and vote together for the best activity.",
     "feature2_title": "Synchronized Memories",
     "feature2_description": "Save and share the history of your cultural activities with all members of your circles.",
     "price": "€2.99 / month",
     "billing_info": "Billed monthly, cancel anytime.",
     "subscribe_button": "Upgrade to Kurius Plus",
-    "disclaimer": "Note for the jury: The payment system is not implemented. This screen simulates the value proposition of the application's business model."
+    "disclaimer": "Note for the jury: The payment system is not implemented. This screen simulates the value proposition of the app's business model."
+  },
+  "demo": {
+    "title": "Demo Mode",
+    "subtitle": "Quickly navigate to key application states for the presentation.",
+    "buttons": {
+      "vote": "Vote Screen",
+      "result": "Result Screen",
+      "close": "Close Demo"
+    }
+  },
+  "onboarding": {
+    "age": {
+      "title": "Who is this profile for?",
+      "subtitle": "This helps Kurius suggest age-appropriate content.",
+      "child": "Child",
+      "child_range": "(Under 12)",
+      "teen": "Teenager",
+      "teen_range": "(13-17)",
+      "adult": "Adult",
+      "adult_range": "(18+)"
+    },
+    "movies": {
+      "title": "To start, what movies do you like?",
+      "subtitle": "Select at least {{count}} to give us an idea."
+    },
+    "tvshows": {
+      "title": "Which TV shows left a mark on you?",
+      "subtitle": "This will help us better understand your tastes."
+    },
+    "books": {
+      "title": "And what books would you recommend?",
+      "subtitle": "Tell us what transported you.",
+      "classicSearchTerm": "classic novels",
+      "bestsellerSearchTerm": "international best sellers"
+    },
+    "saving": {
+      "title": "Setup complete!",
+      "subtitle": "We're preparing {{name}}'s profile..."
+    },
+    "nextButton": "Next",
+    "finishButton": "Finish",
+    "skipButtonInitial": "Skip for now",
+    "skipButtonLater": "Finish and skip this step"
   }
 }

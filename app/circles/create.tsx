@@ -9,17 +9,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/Theme';
 import { notificationService } from '@/services/notificationService';
+import { useTranslation } from 'react-i18next';
 
 export default function CreateCircleScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleCreateCircle = async () => {
     if (name.trim().length < 3) {
-      notificationService.showError("Nom trop court", "Le nom du cercle doit faire au moins 3 caractères.");
+      notificationService.showError(t('circles.create.errors.nameTooShort'), "Le nom du cercle doit faire au moins 3 caractères.");
       return;
     }
     setLoading(true);
@@ -32,11 +34,11 @@ export default function CreateCircleScreen() {
     setLoading(false);
 
     if (error) {
-      notificationService.showError("Erreur", "La création du cercle a échoué.");
+      notificationService.showError(t('common.error'), t('circles.create.errors.creationFailed'));
       console.error(error);
     } else {
-      notificationService.showSuccess("Cercle créé !", `Le cercle "${name.trim()}" a été créé avec succès.`);
-      router.back(); // Revenir à la liste des cercles
+      notificationService.showSuccess(t('common.success'), t('circles.create.success'));
+      router.back();
     }
   };
 
@@ -44,23 +46,23 @@ export default function CreateCircleScreen() {
     <BackgroundWrapper>
       <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Créer un nouveau cercle</Text>
+          <Text style={styles.title}>{t('circles.create.title')}</Text>
         </View>
         
         <CozyCard>
-          <Text style={styles.label}>Nom du cercle</Text>
+          <Text style={styles.label}>{t('circles.create.nameLabel')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ex: Soirées Ciné, Club de lecture..."
+            placeholder={t('circles.create.namePlaceholder')}
             value={name}
             onChangeText={setName}
             placeholderTextColor={theme.colors.textLight}
           />
 
-          <Text style={styles.label}>Description (optionnel)</Text>
+          <Text style={styles.label}>{t('circles.create.descriptionLabel')}</Text>
           <TextInput
             style={[styles.input, styles.textarea]}
-            placeholder="Une petite description pour votre cercle"
+            placeholder={t('circles.create.descriptionPlaceholder')}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -68,7 +70,7 @@ export default function CreateCircleScreen() {
           />
 
           <CozyButton onPress={handleCreateCircle} disabled={loading} size="large" style={{marginTop: 10}}>
-            {loading ? "Création..." : "Créer le cercle"}
+            {loading ? t('circles.create.creatingButton') : t('circles.create.createButton')}
           </CozyButton>
         </CozyCard>
       </View>

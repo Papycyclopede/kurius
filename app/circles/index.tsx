@@ -10,6 +10,8 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { theme } from '@/constants/Theme';
 import { Users, Plus } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { getDemoCircles } from '@/services/demoDataService'; // L'import fonctionnera maintenant
 
 interface Circle {
   id: string;
@@ -20,13 +22,24 @@ interface Circle {
 export default function CirclesListScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isPremium, session } = useAuth();
+  const { t } = useTranslation();
   const [circles, setCircles] = useState<Circle[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCircles = async () => {
-    if (!user) return;
     setLoading(true);
+    if (isPremium && !session) {
+      setCircles(getDemoCircles());
+      setLoading(false);
+      return;
+    }
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
     const { data, error } = await supabase.rpc('get_user_circles');
     if (error) {
       console.error("Supabase error fetching circles:", error);
@@ -39,7 +52,7 @@ export default function CirclesListScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchCircles();
-    }, [user])
+    }, [user, isPremium, session])
   );
 
   return (
@@ -47,7 +60,7 @@ export default function CirclesListScreen() {
       <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
         <View style={styles.header}>
           <Users size={32} color={theme.colors.textDark} />
-          <Text style={styles.title}>Mes Cercles</Text>
+          <Text style={styles.title}>{t('circles.list.title')}</Text>
         </View>
         
         {loading ? (
@@ -58,10 +71,9 @@ export default function CirclesListScreen() {
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={{ paddingTop: 20 }}
                 renderItem={({ item }) => (
-                    // CORRECTION : On utilise la syntaxe "objet" pour la navigation
                     <TouchableOpacity onPress={() => router.push({
-                      pathname: '/circles/[id]', // On donne le nom du fichier de la route
-                      params: { id: item.id }      // On passe les paramètres ici
+                      pathname: '/circles/[id]',
+                      params: { id: item.id }
                     })}>
                         <CozyCard style={styles.circleCard}>
                             <Text style={styles.circleName}>{item.name}</Text>
@@ -71,18 +83,18 @@ export default function CirclesListScreen() {
                 )}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Vous n'avez encore aucun cercle.</Text>
+                        <Text style={styles.emptyText}>{t('circles.list.emptyTitle')}</Text>
                         <CozyButton style={{marginTop: 16}} onPress={() => router.push('/circles/create')}>
-                            Créer mon premier cercle
+                            {t('circles.list.emptyButton')}
                         </CozyButton>
                     </View>
                 }
             />
         )}
-        {!loading && circles.length > 0 && (
+        {!loading && (isPremium || circles.length > 0) && (
             <View style={styles.addButtonContainer}>
                 <CozyButton onPress={() => router.push('/circles/create')} icon={<Plus />} size="large">
-                    Créer un cercle
+                    {t('circles.list.addCircleButton')}
                 </CozyButton>
             </View>
         )}

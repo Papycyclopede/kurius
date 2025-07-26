@@ -2,7 +2,7 @@
 import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import { Send } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import BackgroundWrapper from '@/components/BackgroundWrapper';
 import React from 'react';
@@ -12,6 +12,8 @@ import KuriusAvatar from '@/components/KuriusAvatar';
 import TypingText from '@/components/TypingText';
 import { theme } from '@/constants/Theme';
 import { supabase } from '@/lib/supabase';
+import { getLocalProfiles, LocalProfile, saveOrUpdateProfile } from '@/services/localProfileService'; // Import des services de profil
+import { FavoriteFilm, FavoriteBook, FavoriteTvShow } from '@/types';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,11 +25,37 @@ export default function HomeScreen() {
   const [kuriusMessage, setKuriusMessage] = useState(t('home.kuriusWelcome'));
   const [userMessage, setUserMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [localProfiles, setLocalProfiles] = useState<LocalProfile[]>([]);
 
-  // Met à jour le message d'accueil si la langue change
+  // Charger les profils locaux au démarrage de l'écran
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadProfiles = async () => {
+        const profiles = await getLocalProfiles();
+        setLocalProfiles(profiles);
+      };
+      loadProfiles();
+    }, [])
+  );
+
   useEffect(() => {
     setKuriusMessage(t('home.kuriusWelcome'));
   }, [i18n.language, t]);
+
+  // Met à jour un profil local avec un nouveau favori
+  const applyProfileUpdate = async (profileId: string, newFavorite: FavoriteFilm | FavoriteBook | FavoriteTvShow, category: 'films' | 'books' | 'tvShows') => {
+      const profileToUpdate = localProfiles.find(p => p.id === profileId);
+      if (profileToUpdate) {
+          const updatedProfile = {
+              ...profileToUpdate,
+              [category]: [...(profileToUpdate[category] || []), newFavorite]
+          };
+          await saveOrUpdateProfile(updatedProfile);
+          // Rafraîchir la liste des profils dans l'état local
+          const profiles = await getLocalProfiles();
+          setLocalProfiles(profiles);
+      }
+  };
 
   const handleSendMessage = async () => {
     if (!userMessage.trim() || isLoading) return;
@@ -44,15 +72,28 @@ export default function HomeScreen() {
       const { data, error } = await supabase.functions.invoke('kurius-chat', {
         body: {
           conversationHistory: newHistory,
-          userLanguage: i18n.language, 
+          userLanguage: i18n.language,
+          // On envoie les profils locaux avec la requête !
+          localProfiles: localProfiles,
         },
       });
 
       if (error) throw error;
-      const { conversational_response } = data;
+      
+      // On traite la nouvelle réponse structurée
+      const { conversational_response, profile_updates } = data;
+      
       setKuriusMessage(conversational_response);
       const newModelMessage = { role: 'model', parts: [{ text: conversational_response }] };
       setConversationHistory([...newHistory, newModelMessage]);
+
+      // Si la fonction a renvoyé des mises à jour de profil, on les applique
+      if (profile_updates && Array.isArray(profile_updates)) {
+          for (const update of profile_updates) {
+              await applyProfileUpdate(update.profileId, update.newFavorite, update.category);
+          }
+      }
+
       await refreshProfile();
 
     } catch (error) {
@@ -74,7 +115,6 @@ export default function HomeScreen() {
       >
         <View style={styles.container}>
           
-          {/* ===== BLOC 1 : Le contenu. Il remplit l'espace et est totalement séparé du clavier ===== */}
           <View style={[styles.contentContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
             <View style={styles.logoContainer}>
               <Image
@@ -97,7 +137,6 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* ===== BLOC 2 : La saisie de texte. Ce bloc est à part et sera le seul à bouger ===== */}
           <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 65 }]}>
               <View style={styles.inputWrapper}>
                   <TextInput
@@ -133,7 +172,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 30,
-    paddingBottom: 150, // Espace en bas pour que le contenu ne soit jamais caché par l'input
+    paddingBottom: 150,
   },
   logoContainer: {
     backgroundColor: 'rgba(255, 243, 201, 0.8)',
@@ -205,7 +244,6 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: theme.colors.background,
   },
-  // La KeyboardAvoidingView est maintenant séparée, ce conteneur est pour la barre de saisie
   inputContainer: {
     paddingHorizontal: 20,
     paddingTop: 10, 

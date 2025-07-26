@@ -16,6 +16,8 @@
       "package": "com.kurius.app",
       "permissions": [
         "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
@@ -34,12 +36,16 @@
     "experiments": {
       "typedRoutes": true
     },
+    "owner": "alexandre_sanchez",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/7dae35ad-2032-441e-ac51-2d55e27ec277"
+    },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "bdde34c3-1bda-44c5-8c9f-17a60ecddfd4"
+        "projectId": "7dae35ad-2032-441e-ac51-2d55e27ec277"
       }
-    },
-    "owner": "alexandre_sanchez"
+    }
   }
 }

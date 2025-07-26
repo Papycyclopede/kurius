@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { tmdbService, TvShowMetadata } from '@/services/tmdbService';
 import { X } from 'lucide-react-native';
 import CozyCard from './CozyCard';
+import { useTranslation } from 'react-i18next'; // Importez useTranslation
 
 function useDebounce(value: string, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -21,24 +22,27 @@ interface TvShowSearchModalProps {
   visible: boolean;
   onClose: () => void;
   onTvShowSelect: (tvShow: TvShowMetadata) => void;
+  userLanguage: 'fr' | 'en'; // NOUVEAU : Ajoutez cette prop
 }
 
-export default function TvShowSearchModal({ visible, onClose, onTvShowSelect }: TvShowSearchModalProps) {
+export default function TvShowSearchModal({ visible, onClose, onTvShowSelect, userLanguage }: TvShowSearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TvShowMetadata[]>([]);
   const [loading, setLoading] = useState(false);
   const debouncedQuery = useDebounce(query, 500);
+  const { t } = useTranslation(); // Utilisez useTranslation ici
 
   useEffect(() => {
     const searchTvShows = async () => {
       if (debouncedQuery.length < 3) { setResults([]); return; }
       setLoading(true);
-      const searchResults = await tmdbService.searchTvShow(debouncedQuery);
+      // Passez userLanguage à tmdbService.searchTvShow
+      const searchResults = await tmdbService.searchTvShow(debouncedQuery, userLanguage === 'fr' ? 'fr-FR' : 'en-US');
       setResults(searchResults || []);
       setLoading(false);
     };
     if (debouncedQuery) searchTvShows(); else setResults([]);
-  }, [debouncedQuery]);
+  }, [debouncedQuery, userLanguage]); // Ajoutez userLanguage aux dépendances
 
   const handleSelect = (tvShow: TvShowMetadata) => {
     onTvShowSelect(tvShow);
@@ -52,11 +56,10 @@ export default function TvShowSearchModal({ visible, onClose, onTvShowSelect }: 
       <Image 
         source={{ uri: tmdbService.getImageUrl(item.poster_path) }} 
         style={styles.poster} 
-        // defaultSource={require('@/assets/images/icon.png')} // Suppression de cette ligne
       />
       <View style={styles.resultInfo}>
         <Text style={styles.resultTitle}>{item.name}</Text>
-        <Text style={styles.resultDate}>{item.first_air_date ? `Première diffusion: ${item.first_air_date.split('-')[0]}` : ''}</Text>
+        <Text style={styles.resultDate}>{item.first_air_date ? `${t('searchModals.firstAirDate')}: ${item.first_air_date.split('-')[0]}` : t('searchModals.unknownDate')}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -66,10 +69,10 @@ export default function TvShowSearchModal({ visible, onClose, onTvShowSelect }: 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.modalBackdrop}>
         <CozyCard style={styles.modalContent}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}><X size={24} color="#8B6F47" /></TouchableOpacity>
-          <Text style={styles.modalTitle}>Rechercher une série</Text>
+          <Text style={styles.modalTitle}>{t('searchModals.tvShow.title')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Ex: Game of Thrones, Friends..."
+            placeholder={t('searchModals.tvShow.placeholder')}
             value={query}
             onChangeText={setQuery}
             autoFocus={true}
@@ -81,7 +84,12 @@ export default function TvShowSearchModal({ visible, onClose, onTvShowSelect }: 
             renderItem={renderResult}
             keyExtractor={(item) => item.id.toString()}
             style={styles.resultsList}
-            ListEmptyComponent={!loading && query.length > 2 ? (<Text style={styles.noResultsText}>Aucun résultat pour "{query}"</Text>) : null}
+            // Correction de la syntaxe du ListEmptyComponent
+            ListEmptyComponent={
+                !loading && query.length > 2 ? (
+                    <Text style={styles.noResultsText}>{t('searchModals.noResults', { query })}</Text>
+                ) : null
+            }
           />
         </CozyCard>
       </KeyboardAvoidingView>

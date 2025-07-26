@@ -6,8 +6,8 @@ import {
   import { useState, useCallback } from 'react';
   import { useRouter, useFocusEffect } from 'expo-router';
   import { Plus, Trash2, User, Film, Book, Tv } from 'lucide-react-native';
-  import { getLocalProfiles, saveLocalProfiles, LocalProfile } from '@/services/localProfileService';
-  import { theme } from '@/constants/Theme'; // CORRECTION ICI : '=>' remplacé par 'from'
+  import { getLocalProfiles, saveLocalProfiles, LocalProfile, saveOrUpdateProfile } from '@/services/localProfileService';
+  import { theme } from '@/constants/Theme';
   import BackgroundWrapper from '@/components/BackgroundWrapper';
   import CozyCard from '@/components/CozyCard';
   import CozyButton from '@/components/CozyButton';
@@ -15,33 +15,45 @@ import {
   import { useTranslation } from 'react-i18next';
   import { useSafeAreaInsets } from 'react-native-safe-area-context';
   import Animated, { FadeInDown } from 'react-native-reanimated';
-  
+  import 'react-native-get-random-values';
+  import { v4 as uuidv4 } from 'uuid';
+
   export default function ManageProfilesScreen() {
 	const { t } = useTranslation();
 	const insets = useSafeAreaInsets();
 	const router = useRouter();
-  
+
 	const [profiles, setProfiles] = useState<LocalProfile[]>([]);
-  
+
 	useFocusEffect(
 	  useCallback(() => {
 		const loadProfiles = async () => {
 		  const loadedProfiles = await getLocalProfiles();
 		  setProfiles(loadedProfiles);
 		};
-  
+
 		loadProfiles();
 	  }, [])
 	);
-  
+
 	const handleEdit = (profile: LocalProfile) => {
 	  router.push({ pathname: '/edit-profile', params: { profileId: profile.id } });
 	};
-  
-	const handleAddNew = () => {
-	  router.push('/edit-profile');
+
+    // --- FONCTION MODIFIÉE ---
+	const handleAddNew = async () => {
+      const newProfile: Partial<LocalProfile> = {
+        id: uuidv4(),
+        name: t('manageProfiles.form.newProfileDefaultName'),
+        films: [], books: [], tvShows: [], avatarUri: null
+      };
+      // On sauvegarde immédiatement un profil "coquille" pour avoir un ID
+      await saveOrUpdateProfile(newProfile);
+      // On lance l'assistant en lui passant l'ID du profil à configurer
+	  router.push({ pathname: '/onboarding/taste-wizard', params: { profileId: newProfile.id } });
 	};
-  
+    // --- FIN DE LA MODIFICATION ---
+
 	const handleDelete = (profileId: string) => {
 	  Alert.alert(
 		t('manageProfiles.deleteConfirm.title'),
@@ -60,10 +72,10 @@ import {
 		]
 	  );
 	};
-  
+
 	const renderProfile = ({ item, index }: { item: LocalProfile, index: number }) => {
 	  const cardColor = theme.colors.cardPastels[index % theme.colors.cardPastels.length];
-  
+
 	  return (
 		<Animated.View
 		  entering={FadeInDown.delay(index * 100).duration(400).springify().damping(12)}
@@ -80,17 +92,17 @@ import {
 					</View>
 				  )}
 				</Animated.View>
-  
+
 				<Animated.Text sharedTransitionTag={`profile-${item.id}-name`} style={styles.name}>
 				  {item.name}
 				</Animated.Text>
-  
+
 				<View style={{ flex: 1 }} />
 				<TouchableOpacity onPress={(e) => { e.stopPropagation(); handleDelete(item.id); }} style={styles.actionButton}>
 				  <Trash2 size={18} color={theme.colors.error} />
 				</TouchableOpacity>
 			  </View>
-  
+
 			  <View style={styles.tastesContainer}>
 				<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tastesGrid}>
 				  <View style={styles.tasteItem}><Film size={14} color={theme.colors.textLight} /><Text style={styles.tasteCount}>{item.films?.length || 0}</Text></View>
@@ -103,9 +115,9 @@ import {
 		</Animated.View>
 	  );
 	};
-  
-	const BUTTON_AREA_HEIGHT = 120; // Hauteur approximative du bouton + son padding/marges
-  
+
+	const BUTTON_AREA_HEIGHT = 120;
+
 	return (
 	  <BackgroundWrapper backgroundImage={require('@/assets/images/cosy.png')} noOverlay={true}>
 		<View style={[styles.container, { paddingTop: insets.top }]}>
@@ -133,7 +145,7 @@ import {
 	  </BackgroundWrapper>
 	);
   }
-  
+
   const styles = StyleSheet.create({
 	container: { flex: 1 },
 	list: { flex: 1 },

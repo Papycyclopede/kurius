@@ -44,19 +44,14 @@ export class TMDbService {
     }
     return true;
   }
-
-  // CORRECTION : La fonction accepte maintenant une région potentiellement nulle/undefined et la sécurise
+  
   async getWatchProviders(id: number, type: 'movie' | 'tv', region: string | undefined | null): Promise<WatchProvidersResponse | null> {
     if (!this.checkApiKey()) return null;
-    
-    // On s'assure d'avoir une région valide, avec 'US' par défaut pour éviter l'erreur
     const effectiveRegion = region || 'US';
-
     try {
       const response = await axios.get(`${BASE_URL}/${type}/${id}/watch/providers`, {
         params: { api_key: this.apiKey }
       });
-      // On utilise le code de région sécurisé pour récupérer les bons fournisseurs
       return response.data.results?.[effectiveRegion.toUpperCase()] || null;
     } catch (error) {
       console.error(`Erreur TMDb (getWatchProviders) pour l'ID ${id} et la région ${effectiveRegion}:`, error);
@@ -64,12 +59,11 @@ export class TMDbService {
     }
   }
 
-  // MODIFICATION : Ajout du paramètre language
   async searchMovie(title: string, language: string = 'en-US'): Promise<MovieMetadata[]> {
     if (!this.checkApiKey()) return [];
     try {
       const response = await axios.get(`${BASE_URL}/search/movie`, {
-        params: { api_key: this.apiKey, query: title, language: language } // Utilisation de language
+        params: { api_key: this.apiKey, query: title, language: language }
       });
       return response.data.results || [];
     } catch (error) {
@@ -78,12 +72,11 @@ export class TMDbService {
     }
   }
 
-  // MODIFICATION : Ajout du paramètre language
   async searchTvShow(query: string, language: string = 'en-US'): Promise<TvShowMetadata[]> {
     if (!this.checkApiKey()) return [];
     try {
       const response = await axios.get(`${BASE_URL}/search/tv`, {
-        params: { api_key: this.apiKey, query: query, language: language } // Utilisation de language
+        params: { api_key: this.apiKey, query: query, language: language }
       });
       return response.data.results || [];
     } catch (error) {
@@ -92,12 +85,11 @@ export class TMDbService {
     }
   }
 
-  // MODIFICATION : Ajout du paramètre language
   async getFilmDetails(id: number, language: string = 'en-US'): Promise<MovieMetadata | null> {
     if (!this.checkApiKey()) return null;
     try {
       const response = await axios.get(`${BASE_URL}/movie/${id}`, {
-        params: { api_key: this.apiKey, language: language } // Utilisation de language
+        params: { api_key: this.apiKey, language: language }
       });
       return response.data as MovieMetadata;
     } catch (error) {
@@ -106,12 +98,11 @@ export class TMDbService {
     }
   }
 
-  // MODIFICATION : Ajout du paramètre language
   async getTvShowDetails(id: number, language: string = 'en-US'): Promise<TvShowMetadata | null> {
     if (!this.checkApiKey()) return null;
     try {
       const response = await axios.get(`${BASE_URL}/tv/${id}`, {
-        params: { api_key: this.apiKey, language: language } // Utilisation de language
+        params: { api_key: this.apiKey, language: language }
       });
       return response.data as TvShowMetadata;
     } catch (error) {
@@ -120,12 +111,11 @@ export class TMDbService {
     }
   }
 
-  // MODIFICATION : Ajout du paramètre language
   async getMovieRecommendations(movieId: number, limit: number = 10, language: string = 'en-US'): Promise<MovieMetadata[]> {
     if (!this.checkApiKey()) return [];
     try {
       const response = await axios.get(`${BASE_URL}/movie/${movieId}/recommendations`, {
-        params: { api_key: this.apiKey, language: language, page: 1 } // Utilisation de language
+        params: { api_key: this.apiKey, language: language, page: 1 }
       });
       return (response.data.results || []).slice(0, limit);
     } catch (error) {
@@ -134,12 +124,11 @@ export class TMDbService {
     }
   }
 
-  // MODIFICATION : Ajout du paramètre language
   async getTvShowRecommendations(tvShowId: number, limit: number = 10, language: string = 'en-US'): Promise<TvShowMetadata[]> {
     if (!this.checkApiKey()) return [];
     try {
       const response = await axios.get(`${BASE_URL}/tv/${tvShowId}/recommendations`, {
-        params: { api_key: this.apiKey, language: language, page: 1 } // Utilisation de language
+        params: { api_key: this.apiKey, language: language, page: 1 }
       });
       return (response.data.results || []).slice(0, limit);
     } catch (error) {
@@ -150,6 +139,76 @@ export class TMDbService {
 
   getImageUrl(posterPath: string | null | undefined): string {
     return posterPath ? `${IMAGE_BASE_URL}${posterPath}` : '';
+  }
+
+  async getClassicOrHighlyRatedMovies(language: string, ageRange: 'child' | 'teen' | 'adult'): Promise<MovieMetadata[]> {
+    if (!this.checkApiKey()) return [];
+    const params: any = {
+      api_key: this.apiKey,
+      language: language,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 1000,
+      page: 1
+    };
+
+    switch (ageRange) {
+      case 'child':
+        params.with_genres = '16|10751'; // Animation & Famille
+        // --- CORRECTION CI-DESSOUS ---
+        // On retire ces filtres trop restrictifs
+        // params.certification_country = 'FR';
+        // params.certification = 'U';
+        break;
+      case 'teen':
+        params.with_genres = '12|14|878'; // Aventure, Fantastique, Science-Fiction
+        params['vote_average.gte'] = 7;
+        break;
+      case 'adult':
+        params['vote_average.gte'] = 8;
+        params['vote_count.gte'] = 5000;
+        break;
+    }
+
+    try {
+      const response = await axios.get(`${BASE_URL}/discover/movie`, { params });
+      return response.data.results || [];
+    } catch (error) {
+      console.error(`Erreur TMDb (getClassicOrHighlyRatedMovies) pour ageRange ${ageRange}:`, error);
+      return [];
+    }
+  }
+
+  async getClassicOrHighlyRatedTvShows(language: string, ageRange: 'child' | 'teen' | 'adult'): Promise<TvShowMetadata[]> {
+    if (!this.checkApiKey()) return [];
+    const params: any = {
+      api_key: this.apiKey,
+      language: language,
+      sort_by: 'popularity.desc',
+      'vote_count.gte': 500,
+      page: 1
+    };
+
+    switch (ageRange) {
+      case 'child':
+        params.with_genres = '16|10762'; // Animation & Kids
+        break;
+      case 'teen':
+        params.with_genres = '10759|10765'; // Action & Aventure, Science-Fiction & Fantastique
+        params['vote_average.gte'] = 7;
+        break;
+      case 'adult':
+        params.with_genres = '18|80|99'; // Drame, Crime, Documentaire
+        params['vote_average.gte'] = 7.5;
+        break;
+    }
+
+    try {
+      const response = await axios.get(`${BASE_URL}/discover/tv`, { params });
+      return response.data.results || [];
+    } catch (error) {
+      console.error(`Erreur TMDb (getClassicOrHighlyRatedTvShows) pour ageRange ${ageRange}:`, error);
+      return [];
+    }
   }
 }
 

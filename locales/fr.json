@@ -139,7 +139,8 @@
       "editTitle": "Modifier le profil",
       "newTitle": "Nouveau profil",
       "choosePhoto": "Choisir une photo",
-      "namePlaceholder": "Nom du membre"
+      "namePlaceholder": "Nom du membre",
+      "newProfileDefaultName": "Nouveau Membre"
     }
   },
   "profile": {
@@ -162,13 +163,17 @@
     "findFriends": "Trouver des amis",
     "pendingRequests": "Demandes en attente",
     "premiumTitle": "Mode Jury / Premium",
-    "premiumDescription": "Activez ce mode pour simuler l'expérience Kurius Premium (explications IA, voix, etc.)"
+    "premiumDescription": "Activez ce mode pour simuler l'expérience Kurius Premium (explications IA, voix, etc.)",
+    "workInProgress": "Fonctionnalité en cours de développement"
   },
   "friends": {
+    "list": {
+      "title": "Mes Amis"
+    },
     "search": {
       "title": "Trouver des amis",
-      "subtitle": "Recherchez par nom d'utilisateur unique.",
-      "placeholder": "Nom d'utilisateur...",
+      "subtitle": "Recherchez par nom complet ou par email.",
+      "placeholder": "Nom ou email...",
       "button": "Rechercher",
       "buttonLoading": "Recherche...",
       "noResults": "Aucun utilisateur trouvé pour \"{{query}}\"",
@@ -184,6 +189,45 @@
       "errorDecline": "Impossible de refuser la demande.",
       "errorSend": "Impossible d'envoyer la demande d'ami.",
       "errorAlreadyPending": "Une demande d'ami est déjà en cours avec cet utilisateur."
+    }
+  },
+  "circles": {
+    "list": {
+        "title": "Mes Cercles",
+        "emptyTitle": "Vous n'avez encore aucun cercle.",
+        "emptyButton": "Créer mon premier cercle",
+        "addCircleButton": "Créer un cercle",
+        "circleName": "Nom du cercle",
+        "circleDescription": "Description (optionnel)"
+    },
+    "create": {
+        "title": "Créer un nouveau cercle",
+        "nameLabel": "Nom du cercle",
+        "namePlaceholder": "Ex: Soirées Ciné, Club de lecture...",
+        "descriptionLabel": "Description (optionnel)",
+        "descriptionPlaceholder": "Une petite description pour votre cercle",
+        "createButton": "Créer le cercle",
+        "creatingButton": "Création...",
+        "errors": {
+            "nameTooShort": "Le nom du cercle doit faire au moins 3 caractères.",
+            "creationFailed": "La création du cercle a échoué."
+        },
+        "success": "Cercle créé avec succès !"
+    },
+    "inviteModal": {
+        "title": "Inviter des amis",
+        "emptyText": "Tous vos amis sont déjà dans ce cercle !",
+        "inviteButton": "Inviter ({{count}})"
+    },
+    "details": {
+        "title": "Détails du Cercle",
+        "membersTitle": "Membres",
+        "inviteButton": "Inviter des Membres",
+        "leaveButton": "Quitter le Cercle",
+        "deleteButton": "Supprimer le Cercle",
+        "noMembers": "Aucun membre dans ce cercle pour le moment.",
+        "pendingInvitations": "Invitations en attente",
+        "noPendingInvitations": "Aucune invitation en attente."
     }
   },
   "memories": {
@@ -203,15 +247,25 @@
     "title": "Faites votre choix",
     "subtitle": "Quelle activité allez-vous partager ?",
     "whyChoice": "L'avis de Kurius",
-    "chooseButton": "Choisir celui-ci"
+    "chooseButton": "Choisir celui-ci",
+    "unlockWithPremium": "Débloquez l'avis de Kurius avec Premium"
   },
   "result": {
-    "title": "Votre choix est fait !",
-    "subtitle": "Voici l'activité que vous allez partager.",
-    "geminiTitle": "L'avis de Kurius",
-    "backButton": "Retour à l'accueil",
-    "loading": "Chargement du résultat..."
-  },
+  "title": "Votre choix est fait !",
+  "subtitle": "Voici l'activité que vous allez partager.",
+  "geminiTitle": "L'avis de Kurius",
+  "backButton": "Retour à l'accueil",
+  "loading": "Chargement du résultat...",
+  "streamOn": "Streaming sur",
+  "rentFrom": "Location sur",
+  "buyFrom": "Achat sur",
+  "moreProviders": "Voir plus de plateformes",
+  "buyBook": "Acheter le livre",
+  "noStreamLinkAvailable": "Aucun lien de streaming/achat disponible pour {{region}}.",
+  "noBuyLinkAvailable": "Aucun lien d'achat disponible pour ce livre.",
+  "noLinkAvailable": "Aucun lien disponible.",
+  "unlockOpinion": "Passez à Kurius Premium pour découvrir l'avis de l'IA !"
+},
   "language": {
     "title": "Langue / Language",
     "french": "Français",
@@ -243,5 +297,48 @@
     "billing_info": "Facturation mensuelle, annulable à tout moment.",
     "subscribe_button": "Passer à Kurius Plus",
     "disclaimer": "Note pour le jury: Le système de paiement n'est pas implémenté. Cet écran simule la proposition de valeur du modèle économique de l'application."
+  },
+  "demo": {
+    "title": "Mode Démo",
+    "subtitle": "Naviguez rapidement vers des états clés de l'application pour la présentation.",
+    "buttons": {
+      "vote": "Écran de Vote",
+      "result": "Écran de Résultat",
+      "close": "Fermer la démo"
+    }
+  },
+  "onboarding": {
+    "age": {
+      "title": "Pour qui est ce profil ?",
+      "subtitle": "Cela aide Kurius à suggérer du contenu adapté à l'âge.",
+      "child": "Enfant",
+      "child_range": "(-12 ans)",
+      "teen": "Adolescent",
+      "teen_range": "(13-17 ans)",
+      "adult": "Adulte",
+      "adult_range": "(18+ ans)"
+    },
+    "movies": {
+      "title": "Pour commencer, quels films aimez-vous ?",
+      "subtitle": "Sélectionnez-en au moins {{count}} pour nous donner une idée."
+    },
+    "tvshows": {
+      "title": "Quelles séries vous ont marqué(e) ?",
+      "subtitle": "Cela nous aidera à mieux cerner vos goûts."
+    },
+    "books": {
+      "title": "Et quels livres recommanderiez-vous ?",
+      "subtitle": "Dites-nous ce qui vous a transporté(e).",
+      "classicSearchTerm": "romans classiques",
+      "bestsellerSearchTerm": "best sellers internationaux"
+    },
+    "saving": {
+      "title": "Configuration terminée !",
+      "subtitle": "Nous préparons le profil de {{name}}..."
+    },
+    "nextButton": "Suivant",
+    "finishButton": "Terminer",
+    "skipButtonInitial": "Passer pour le moment",
+    "skipButtonLater": "Terminer et sauter cette étape"
   }
 }

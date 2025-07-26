@@ -1,8 +1,8 @@
 // app/auth/sign-in.tsx
-import { View, Text, StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native'; // Ajout de 'Image'
+import { View, Text, StyleSheet, TextInput, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { useState } from 'react';
 import { Link, useRouter } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext'; // Importez useAuth
 import BackgroundWrapper from '@/components/BackgroundWrapper';
 import CozyCard from '@/components/CozyCard';
 import CozyButton from '@/components/CozyButton';
@@ -10,7 +10,7 @@ import { LogIn, Mail, Lock, TestTube } from 'lucide-react-native';
 
 export default function SignInScreen() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, togglePremiumStatus, isPremium } = useAuth(); // Ajoutez togglePremiumStatus et isPremium
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,10 @@ export default function SignInScreen() {
     setLoading(false);
   };
 
-  const handleDemoAccess = () => {
+  const handleDemoAccess = async () => { // Rendez la fonction async
+    // Activez ou désactivez le mode premium.
+    // L'état est stocké via AsyncStorage dans AuthContext.
+    await togglePremiumStatus(); 
     router.replace('/');
   };
 

@@ -9,6 +9,7 @@ import { useFocusEffect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { theme } from '@/constants/Theme';
 import { Users } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 interface Friend {
   id: string;
@@ -19,6 +20,7 @@ interface Friend {
 export default function FriendListScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +49,7 @@ export default function FriendListScreen() {
       <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
         <View style={styles.header}>
             <Users size={32} color={theme.colors.textDark} />
-            <Text style={styles.title}>Mes Amis</Text>
+            <Text style={styles.title}>{t('friends.list.title')}</Text>
         </View>
         
         {loading ? (

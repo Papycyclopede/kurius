@@ -15,11 +15,13 @@ import React, { useState, useEffect } from 'react';
 import { tmdbService, MovieMetadata } from '@/services/tmdbService';
 import { X } from 'lucide-react-native';
 import CozyCard from './CozyCard';
+import { useTranslation } from 'react-i18next'; // Importez useTranslation
 
 interface FilmSearchModalProps {
   visible: boolean;
   onClose: () => void;
   onFilmSelect: (film: MovieMetadata) => void;
+  userLanguage: 'fr' | 'en'; // NOUVEAU : Ajoutez cette prop
 }
 
 function useDebounce(value: string, delay: number) {
@@ -35,11 +37,12 @@ function useDebounce(value: string, delay: number) {
   return debouncedValue;
 }
 
-export default function FilmSearchModal({ visible, onClose, onFilmSelect }: FilmSearchModalProps) {
+export default function FilmSearchModal({ visible, onClose, onFilmSelect, userLanguage }: FilmSearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MovieMetadata[]>([]);
   const [loading, setLoading] = useState(false);
   const debouncedQuery = useDebounce(query, 500);
+  const { t } = useTranslation(); // Utilisez useTranslation ici
 
   useEffect(() => {
     const searchFilms = async () => {
@@ -48,7 +51,8 @@ export default function FilmSearchModal({ visible, onClose, onFilmSelect }: Film
         return;
       }
       setLoading(true);
-      const searchResults = await tmdbService.searchMovie(debouncedQuery);
+      // Passez userLanguage à tmdbService.searchMovie
+      const searchResults = await tmdbService.searchMovie(debouncedQuery, userLanguage === 'fr' ? 'fr-FR' : 'en-US');
       setResults(searchResults || []);
       setLoading(false);
     };
@@ -58,7 +62,7 @@ export default function FilmSearchModal({ visible, onClose, onFilmSelect }: Film
     } else {
         setResults([]);
     }
-  }, [debouncedQuery]);
+  }, [debouncedQuery, userLanguage]); // Ajoutez userLanguage aux dépendances
 
   const handleSelect = (film: MovieMetadata) => {
     onFilmSelect(film);
@@ -72,11 +76,10 @@ export default function FilmSearchModal({ visible, onClose, onFilmSelect }: Film
       <Image 
         source={{ uri: tmdbService.getImageUrl(item.poster_path) }} 
         style={styles.poster} 
-        // defaultSource={require('@/assets/images/icon.png')} // Suppression de cette ligne
       />
       <View style={styles.resultInfo}>
         <Text style={styles.resultTitle}>{item.title}</Text>
-        <Text style={styles.resultYear}>{item.release_date?.split('-')[0] || 'Date inconnue'}</Text>
+        <Text style={styles.resultYear}>{item.release_date?.split('-')[0] || t('searchModals.unknownDate')}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -91,10 +94,10 @@ export default function FilmSearchModal({ visible, onClose, onFilmSelect }: Film
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <X size={24} color="#8B6F47" />
           </TouchableOpacity>
-          <Text style={styles.modalTitle}>Rechercher un film</Text>
+          <Text style={styles.modalTitle}>{t('searchModals.film.title')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Titre du film..."
+            placeholder={t('searchModals.film.placeholder')}
             value={query}
             onChangeText={setQuery}
             autoFocus={true}
@@ -107,9 +110,10 @@ export default function FilmSearchModal({ visible, onClose, onFilmSelect }: Film
             renderItem={renderResult}
             keyExtractor={(item) => item.id.toString()}
             style={styles.resultsList}
+            // Correction de la syntaxe du ListEmptyComponent
             ListEmptyComponent={
                 !loading && query.length > 2 ? (
-                    <Text style={styles.noResultsText}>Aucun résultat pour "{query}"</Text>
+                    <Text style={styles.noResultsText}>{t('searchModals.noResults', { query })}</Text>
                 ) : null
             }
           />

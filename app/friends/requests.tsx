@@ -11,21 +11,21 @@ import { useFocusEffect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { notificationService } from '@/services/notificationService';
 import { theme } from '@/constants/Theme';
+import { useTranslation } from 'react-i18next';
 
-// CORRECTION DÉFINITIVE : `profiles` est maintenant un TABLEAU d'objets,
-// conformément à ce que le message d'erreur TypeScript nous indique.
 interface FriendRequest {
   id: string;
   requester_id: string;
   profiles: {
     full_name: string;
     avatar_url: string | null;
-  }[]; // C'est un tableau, comme l'indique l'erreur
+  }[];
 }
 
 export default function FriendRequestsScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +44,7 @@ export default function FriendRequestsScreen() {
       .eq('status', 'pending');
 
     if (error) {
-      notificationService.showError("Erreur", "Impossible de charger les demandes d'ami.");
+      notificationService.showError(t('common.error'), "Impossible de charger les demandes d'ami.");
       console.error("Supabase error fetching requests:", error);
     } else {
       setRequests(data as FriendRequest[]);
@@ -65,10 +65,10 @@ export default function FriendRequestsScreen() {
       .eq('id', friendshipId);
 
     if (error) {
-      notificationService.showError("Erreur", "Impossible d'accepter la demande.");
+      notificationService.showError(t('common.error'), t('friends.requests.errorAccept'));
       console.error("Supabase error accepting request:", error);
     } else {
-      notificationService.showSuccess("Succès", "Ami ajouté !");
+      notificationService.showSuccess(t('common.success'), t('friends.requests.successAdd'));
       fetchRequests();
     }
   };
@@ -80,14 +80,13 @@ export default function FriendRequestsScreen() {
       .eq('id', friendshipId);
 
     if (error) {
-      notificationService.showError("Erreur", "Impossible de refuser la demande.");
+      notificationService.showError(t('common.error'), t('friends.requests.errorDecline'));
       console.error("Supabase error declining request:", error);
     } else {
       fetchRequests();
     }
   };
   
-  // CORRECTION : On extrait le premier élément du tableau `profiles`.
   const getProfileData = (item: FriendRequest) => {
       return item.profiles && item.profiles.length > 0 ? item.profiles[0] : null;
   }
@@ -95,7 +94,7 @@ export default function FriendRequestsScreen() {
   return (
     <BackgroundWrapper>
       <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
-        <Text style={styles.title}>Demandes d'ami</Text>
+        <Text style={styles.title}>{t('friends.requests.title')}</Text>
         
         {loading ? (
             <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 40 }} />
@@ -127,7 +126,7 @@ export default function FriendRequestsScreen() {
                 }}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Aucune nouvelle demande d'ami.</Text>
+                        <Text style={styles.emptyText}>{t('friends.requests.empty')}</Text>
                     </View>
                 }
             />
