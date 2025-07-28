@@ -287,17 +287,21 @@
     "noResults": "Aucun résultat pour \"{{query}}\""
   },
   "plus": {
-    "title": "Kurius Plus",
-    "subtitle": "Débloquez le plein potentiel de votre cocon culturel.",
-    "feature1_title": "Cercles d'Amis Partagés",
-    "feature1_description": "Invitez d'autres utilisateurs, créez des événements et votez ensemble pour la meilleure activité.",
-    "feature2_title": "Souvenirs Synchronisés",
-    "feature2_description": "Sauvegardez et partagez l'historique de vos activités culturelles avec tous les membres de vos cercles.",
-    "price": "2,99€ / mois",
-    "billing_info": "Facturation mensuelle, annulable à tout moment.",
-    "subscribe_button": "Passer à Kurius Plus",
-    "disclaimer": "Note pour le jury: Le système de paiement n'est pas implémenté. Cet écran simule la proposition de valeur du modèle économique de l'application."
-  },
+  "title": "Kurius Plus",
+  "subtitle": "Débloquez le plein potentiel de votre cocon culturel.",
+  "feature1_title": "Connectez-vous, où que vous soyez",
+  "feature1_description": "Allez au-delà de votre foyer. Invitez des amis, créez des événements et votez ensemble en temps réel.",
+  "feature2_title": "L'avis complet de Kurius",
+  "feature2_description": "Débloquez des explications détaillées et personnalisées pour chaque recommandation, transformant chaque choix en découverte.",
+  "feature3_title": "La Voix de Kurius",
+  "feature3_description": "Donnez vie à l'expérience avec la voix signature de Kurius pour tous les commentaires de l'IA.",
+  "feature4_title": "Souvenirs Partagés",
+  "feature4_description": "Construisez une archive durable de tous les grands moments que vos cercles ont partagés ensemble.",
+  "price": "2,99€ / mois",
+  "billing_info": "Facturation mensuelle, annulable à tout moment.",
+  "subscribe_button": "Passer à Kurius Plus",
+  "disclaimer": "Note pour le jury: Le système de paiement n'est pas implémenté. Cet écran simule la proposition de valeur du modèle économique de l'application."
+},
   "demo": {
     "title": "Mode Démo",
     "subtitle": "Naviguez rapidement vers des états clés de l'application pour la présentation.",

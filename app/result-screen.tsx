@@ -68,7 +68,8 @@ export default function ResultScreen() {
 
         if (isPremium && wasExplanationVisible && parsedWinner.geminiExplanation) {
           setTimeout(() => {
-            voiceService.playText(parsedWinner.geminiExplanation);
+            // CORRECTION ICI
+            voiceService.playText(parsedWinner.geminiExplanation, isPremium);
           }, 500);
         }
 
@@ -238,7 +239,8 @@ export default function ResultScreen() {
               <View style={styles.geminiHeader}>
                 <Sparkles size={16} color={theme.colors.textDark} />
                 <Text style={styles.geminiTitle}>{t('result.geminiTitle')}</Text>
-                <TouchableOpacity onPress={() => voiceService.playText(winner.geminiExplanation)}>
+                {/* CORRECTION ICI */}
+                <TouchableOpacity onPress={() => voiceService.playText(winner.geminiExplanation, isPremium)}>
                   <Volume2 size={20} color={theme.colors.textLight} />
                 </TouchableOpacity>
               </View>

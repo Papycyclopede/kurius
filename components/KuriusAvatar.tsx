@@ -9,15 +9,17 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { voiceService } from '@/services/voiceService';
+import { useAuth } from '@/contexts/AuthContext'; // <-- 1. AJOUT DE L'IMPORT
 
 interface KuriusAvatarProps {
   size?: 'small' | 'medium' | 'large' | 'xlarge';
   animated?: boolean;
-  speechText?: string; // Nouvelle propriété pour le texte à dire
+  speechText?: string;
 }
 
 export default function KuriusAvatar({ size = 'medium', animated = false, speechText }: KuriusAvatarProps) {
   const yOffset = useSharedValue(0);
+  const { isPremium } = useAuth(); // <-- 2. ON RÉCUPÈRE LE STATUT PREMIUM
 
   useEffect(() => {
     if (animated) {
@@ -39,7 +41,8 @@ export default function KuriusAvatar({ size = 'medium', animated = false, speech
   
   const handlePress = () => {
     if (speechText) {
-      voiceService.playText(speechText);
+      // 3. ON PASSE LE STATUT PREMIUM AU SERVICE VOCAL
+      voiceService.playText(speechText, isPremium);
     }
   };
 

@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   avatarWrapper: {
     position: 'relative',
     width: 250,
-    height: 250,
+    height: 350,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   },
   bubbleWrapper: {
     position: 'absolute',
-    bottom: 300,
+    bottom: 350,
     width: '150%', 
     alignItems: 'center',
     zIndex: 10,
