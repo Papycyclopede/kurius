@@ -2,33 +2,36 @@
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { EnrichedRecommendation } from '@/services/recommendationService';
+import { EnrichedRecommendation, EventCategory } from '@/services/recommendationService';
 import { addHistoryEvent } from '@/services/historyService';
 import BackgroundWrapper from '@/components/BackgroundWrapper';
 import CozyCard from '@/components/CozyCard';
 import CozyButton from '@/components/CozyButton';
 import { useTranslation } from 'react-i18next';
 import React from 'react';
-import { Volume2, RefreshCw, Star as StarIcon } from 'lucide-react-native';
+import { Volume2, RefreshCw, Star as StarIcon, ThumbsDown } from 'lucide-react-native';
 import { voiceService } from '@/services/voiceService';
 import { theme } from '@/constants/Theme';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useAuth } from '@/contexts/AuthContext';
+import { notificationService } from '@/services/notificationService';
+import { qlooService } from '@/services/qlooService';
+import { getLocalProfiles, saveLocalProfiles, LocalProfile } from '@/services/localProfileService';
 
 export default function ChoiceScreen() {
   const router = useRouter();
   const { recommendations: rawRecommendations, participants: rawParticipants, category: rawCategory } = useLocalSearchParams();
   const { t } = useTranslation();
-  const { isPremium } = useAuth(); // Récupérer isPremium ici
+  const { isPremium } = useAuth();
   
   const [recommendations, setRecommendations] = useState<EnrichedRecommendation[]>([]);
   const [participants, setParticipants] = useState<string[]>([]);
-  const [category, setCategory] = useState<string | null>(null);
+  const [category, setCategory] = useState<EventCategory | null>(null);
 
   useEffect(() => {
     if (rawRecommendations && typeof rawRecommendations === 'string') setRecommendations(JSON.parse(rawRecommendations));
     if (rawParticipants && typeof rawParticipants === 'string') setParticipants(JSON.parse(rawParticipants));
-    if (rawCategory && typeof rawCategory === 'string') setCategory(rawCategory);
+    if (rawCategory && typeof rawCategory === 'string') setCategory(rawCategory as EventCategory);
   }, [rawRecommendations, rawParticipants, rawCategory]);
 
   useFocusEffect(
@@ -53,17 +56,42 @@ export default function ChoiceScreen() {
       pathname: '/result-screen', 
       params: { 
         winner: JSON.stringify(choice),
+        participants: JSON.stringify(participants), // On passe les participants à l'écran de résultat
         wasExplanationVisible: String(wasExplanationVisible)
       } 
     });
   };
 
+  const handleDislike = async (dislikedReco: EnrichedRecommendation) => {
+    await voiceService.stop();
+
+    const qlooResults = await qlooService.searchContent({ title: dislikedReco.title }, dislikedReco.type, 2);
+    const qlooIdToDislike = qlooResults[0]?.entity_id;
+
+    if (!qlooIdToDislike) {
+      notificationService.showError("Oups !", "Impossible de marquer cette recommandation.");
+      return;
+    }
+
+    const currentProfiles = await getLocalProfiles();
+    const updatedProfiles = currentProfiles.map((profile: LocalProfile) => {
+      if (participants.includes(profile.name)) {
+        const dislikedIds = new Set(profile.dislikedQlooIds || []);
+        dislikedIds.add(qlooIdToDislike);
+        return { ...profile, dislikedQlooIds: Array.from(dislikedIds) };
+      }
+      return profile;
+    });
+
+    await saveLocalProfiles(updatedProfiles);
+
+    setRecommendations(prevRecos => prevRecos.filter(rec => rec.id !== dislikedReco.id));
+    notificationService.showInfo("Noté !", "Nous ne vous recommanderons plus cette œuvre.");
+  };
+
   const handleRefreshRecommendations = async () => {
     await voiceService.stop();
     // Votre logique de rafraîchissement
-    // Pour une démo, vous pourriez re-générer des recommandations ici
-    // en appelant recommendationService.generateRecommendations
-    // avec les mêmes paramètres, ou en simulant un rafraîchissement.
   };
 
   return (
@@ -88,11 +116,10 @@ export default function ChoiceScreen() {
                 </View>
               </View>
 
-              {(isPremium || index === 0) ? ( // Le premier élément a toujours l'explication IA
+              {(isPremium || index === 0) ? (
                 <CozyCard transparent style={styles.geminiCard}>
                   <View style={styles.geminiHeader}>
                     <Text style={styles.geminiTitle}>{t('vote.whyChoice')}</Text>
-                    {/* Passer isPremium à voiceService.playText */}
                     <TouchableOpacity onPress={() => voiceService.playText(rec.geminiExplanation, isPremium)}>
                       <Volume2 size={20} color={theme.colors.textLight} />
                     </TouchableOpacity>
@@ -110,9 +137,19 @@ export default function ChoiceScreen() {
                 </TouchableOpacity>
               )}
 
-              <CozyButton onPress={() => handleChoose(rec, index)} style={{marginTop: 16}}>
-                {t('vote.chooseButton')}
-              </CozyButton>
+              <View style={styles.actionButtonsContainer}>
+                  <CozyButton 
+                    onPress={() => handleDislike(rec)} 
+                    variant="ghost" 
+                    style={styles.dislikeButton}
+                  >
+                      <ThumbsDown size={20} color={theme.colors.textLight} />
+                  </CozyButton>
+                  <CozyButton onPress={() => handleChoose(rec, index)} style={{flex: 1}}>
+                    {t('vote.chooseButton')}
+                  </CozyButton>
+              </View>
+
             </CozyCard>
           </Animated.View>
         ))}
@@ -136,7 +173,7 @@ export default function ChoiceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingBottom: 120, }, // Espacement pour la barre d'onglets
+  container: { paddingBottom: 120, },
   header: { padding: 20, paddingTop: 60, alignItems: 'center' },
   title: { ...theme.fonts.title, fontSize: 28, textAlign: 'center' },
   subtitle: { ...theme.fonts.body, fontSize: 16, color: theme.colors.textLight, marginTop: 8 },
@@ -166,5 +203,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     flex: 1,
     fontWeight: '600'
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+  },
+  dislikeButton: {
+    paddingHorizontal: 16,
+    borderColor: theme.colors.borderColor,
   },
 });

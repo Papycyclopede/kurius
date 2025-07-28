@@ -1,12 +1,12 @@
 // app/(tabs)/manage-profiles.tsx
 import {
 	View, Text, StyleSheet, FlatList, TouchableOpacity,
-	Alert, Image, ScrollView
+	Alert, Image, ScrollView, Keyboard
   } from 'react-native';
   import { useState, useCallback } from 'react';
   import { useRouter, useFocusEffect } from 'expo-router';
   import { Plus, Trash2, User, Film, Book, Tv } from 'lucide-react-native';
-  import { getLocalProfiles, saveLocalProfiles, LocalProfile, saveOrUpdateProfile } from '@/services/localProfileService';
+  import { getLocalProfiles, saveLocalProfiles, LocalProfile } from '@/services/localProfileService';
   import { theme } from '@/constants/Theme';
   import BackgroundWrapper from '@/components/BackgroundWrapper';
   import CozyCard from '@/components/CozyCard';
@@ -15,8 +15,6 @@ import {
   import { useTranslation } from 'react-i18next';
   import { useSafeAreaInsets } from 'react-native-safe-area-context';
   import Animated, { FadeInDown } from 'react-native-reanimated';
-  import 'react-native-get-random-values';
-  import { v4 as uuidv4 } from 'uuid';
 
   export default function ManageProfilesScreen() {
 	const { t } = useTranslation();
@@ -40,19 +38,10 @@ import {
 	  router.push({ pathname: '/edit-profile', params: { profileId: profile.id } });
 	};
 
-    // --- FONCTION MODIFIÉE ---
-	const handleAddNew = async () => {
-      const newProfile: Partial<LocalProfile> = {
-        id: uuidv4(),
-        name: t('manageProfiles.form.newProfileDefaultName'),
-        films: [], books: [], tvShows: [], avatarUri: null
-      };
-      // On sauvegarde immédiatement un profil "coquille" pour avoir un ID
-      await saveOrUpdateProfile(newProfile);
-      // On lance l'assistant en lui passant l'ID du profil à configurer
-	  router.push({ pathname: '/onboarding/taste-wizard', params: { profileId: newProfile.id } });
+	const handleAddNew = () => {
+      Keyboard.dismiss(); 
+	  router.push('/onboarding/taste-wizard');
 	};
-    // --- FIN DE LA MODIFICATION ---
 
 	const handleDelete = (profileId: string) => {
 	  Alert.alert(
@@ -135,9 +124,11 @@ import {
 			}
 			ListFooterComponent={
 			  <View style={styles.listFooterButtonContainer}>
+                {/* --- DÉBUT DE LA CORRECTION --- */}
 				<CozyButton onPress={handleAddNew} icon={<Plus size={16} color={theme.colors.textOnPrimary_alt} />} size="large">
 				  {t('manageProfiles.addProfileButton')}
 				</CozyButton>
+                {/* --- FIN DE LA CORRECTION (suppression de la faute de frappe "Co.zyButton") --- */}
 			  </View>
 			}
 		  />

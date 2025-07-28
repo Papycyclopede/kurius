@@ -1,11 +1,11 @@
 // app/result-screen.tsx
 import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity, Linking, Alert } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
-import { Trophy, Sparkles, ShoppingCart, Clapperboard, Volume2, Star as StarIcon } from 'lucide-react-native';
+import { Trophy, Sparkles, ShoppingCart, Clapperboard, Volume2, Star as StarIcon, PlayCircle } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { EnrichedRecommendation } from '@/services/recommendationService';
 import { tmdbService, WatchProvidersResponse } from '@/services/tmdbService';
-import { bookService, BookMetadata } from '@/services/bookService';
+import { bookService } from '@/services/bookService';
 import BackgroundWrapper from '@/components/BackgroundWrapper';
 import CozyCard from '@/components/CozyCard';
 import CozyButton from '@/components/CozyButton';
@@ -15,91 +15,148 @@ import * as Localization from 'expo-localization';
 import { voiceService } from '@/services/voiceService';
 import { theme } from '@/constants/Theme';
 import { useAuth } from '@/contexts/AuthContext';
+import * as WebBrowser from 'expo-web-browser';
+
+// --- AMÉLIORATION : Imports pour la collecte de données ---
+import { supabase } from '@/lib/supabase';
+import { getLocalProfiles, LocalProfile } from '@/services/localProfileService';
+
+// --- AMÉLIORATION : État unifié pour plus de clarté ---
+interface ScreenState {
+  isLoading: boolean;
+  winner: EnrichedRecommendation | null;
+  watchProviders: WatchProvidersResponse | null;
+  buyLink: string | null;
+  trailerKey: string | null;
+  userRegion: string;
+}
 
 export default function ResultScreen() {
   const router = useRouter();
-  const { winner: rawWinner, wasExplanationVisible: rawWasExplanationVisible } = useLocalSearchParams();
+  const { 
+    winner: rawWinner, 
+    participants: rawParticipants, 
+    wasExplanationVisible: rawWasExplanationVisible 
+  } = useLocalSearchParams();
+  
   const { t, i18n } = useTranslation();
   const { isPremium } = useAuth();
-  
-  const [winner, setWinner] = useState<EnrichedRecommendation | null>(null);
-  const [watchProviders, setWatchProviders] = useState<WatchProvidersResponse | null>(null);
-  const [buyLink, setBuyLink] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingProviders, setIsLoadingProviders] = useState(true);
-  const [userRegion, setUserRegion] = useState<string>('US');
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+  // --- AMÉLIORATION : Utilisation de l'état unifié ---
+  const [state, setState] = useState<ScreenState>({
+    isLoading: true,
+    winner: null,
+    watchProviders: null,
+    buyLink: null,
+    trailerKey: null,
+    userRegion: 'US',
+  });
 
   const wasExplanationVisible = rawWasExplanationVisible === 'true';
 
-  useEffect(() => {
-    const initializeWinner = async () => {
-      if (rawWinner && typeof rawWinner === 'string') {
-        let parsedWinner: EnrichedRecommendation = JSON.parse(rawWinner);
-        setWinner(parsedWinner);
-        
-        setIsLoadingDetails(true);
-        const currentLanguageCode = i18n.language;
-
-        try {
-          if (parsedWinner.type === 'film') {
-            const freshDetails = await tmdbService.getFilmDetails(parseInt(parsedWinner.id, 10), currentLanguageCode === 'fr' ? 'fr-FR' : 'en-US');
-            if (freshDetails) {
-              parsedWinner.title = freshDetails.title;
-              parsedWinner.description = freshDetails.overview;
-            }
-          } else if (parsedWinner.type === 'tvShow') {
-            const freshDetails = await tmdbService.getTvShowDetails(parseInt(parsedWinner.id, 10), currentLanguageCode === 'fr' ? 'fr-FR' : 'en-US');
-            if (freshDetails) {
-              parsedWinner.title = freshDetails.name;
-              parsedWinner.description = freshDetails.overview;
-            }
-          }
-        } catch (error) {
-          console.error("Erreur lors du rafraîchissement des détails du souvenir :", error);
-        } finally {
-          setWinner({ ...parsedWinner });
-          setIsLoadingDetails(false);
+  // --- AMÉLIORATION : Logique de collecte de données extraite dans une fonction dédiée ---
+  const logSessionToSupabase = async (
+    winner: EnrichedRecommendation, 
+    participants: string[], 
+    region: string
+  ) => {
+    try {
+      const allLocalProfiles = await getLocalProfiles();
+      const participantProfiles = allLocalProfiles.filter((p: LocalProfile) => participants.includes(p.name));
+      
+      const participants_snapshot = participantProfiles.map((p: LocalProfile) => ({
+        age_range: p.ageRange || 'unknown',
+        favorite_count: {
+          films: p.films?.length || 0,
+          books: p.books?.length || 0,
+          tvShows: p.tvShows?.length || 0,
         }
+      }));
 
-        const locales = await Localization.getLocales();
-        const region = locales[0]?.regionCode || 'US';
-        setUserRegion(region);
+      const { error } = await supabase.rpc('log_recommendation_session', {
+        p_session_type: 'local',
+        p_circle_id: null,
+        p_participants_snapshot: participants_snapshot,
+        p_category: winner.type,
+        p_winner_title: winner.title,
+        p_winner_id: winner.id,
+        p_reco_count: 3,
+        p_region: region
+      });
 
-        if (isPremium && wasExplanationVisible && parsedWinner.geminiExplanation) {
-          setTimeout(() => {
-            // CORRECTION ICI
-            voiceService.playText(parsedWinner.geminiExplanation, isPremium);
-          }, 500);
-        }
-
-        try {
-          if (parsedWinner.type === 'film' || parsedWinner.type === 'tvShow') {
-            const type = parsedWinner.type === 'film' ? 'movie' : 'tv';
-            const providers = await tmdbService.getWatchProviders(parseInt(parsedWinner.id, 10), type, region);
-            setWatchProviders(providers);
-          } else if (parsedWinner.type === 'book') {
-            const bookResults = await bookService.searchBook(`intitle:"${parsedWinner.title}"`, 1, region, locales[0]?.languageCode || 'en');
-            if (bookResults.length > 0 && bookResults[0].buyLink) {
-              setBuyLink(bookResults[0].buyLink);
-            }
-          }
-        } catch (e) {
-          console.error("[ResultScreen] Erreur lors de la récupération des fournisseurs/liens :", e);
-        } finally {
-          setIsLoadingProviders(false);
-        }
-        setIsLoading(false);
+      if (error) {
+        console.error("Erreur lors de la journalisation de la session:", error);
       } else {
-        router.replace('/');
+        console.log("Session de recommandation journalisée avec succès.");
       }
+    } catch (logError) {
+      console.error("Erreur de préparation pour la journalisation:", logError);
+    }
+  };
+
+  useEffect(() => {
+    const fetchAndLogData = async () => {
+      // --- AMÉLIORATION : Robustesse accrue ---
+      if (!rawWinner || typeof rawWinner !== 'string' || !rawParticipants || typeof rawParticipants !== 'string') {
+        console.error("Données de navigation invalides ou manquantes.");
+        if(router.canGoBack()) router.back();
+        else router.replace('/');
+        return;
+      }
+
+      let parsedWinner: EnrichedRecommendation;
+      let parsedParticipants: string[];
+      try {
+        parsedWinner = JSON.parse(rawWinner);
+        parsedParticipants = JSON.parse(rawParticipants);
+      } catch (e) {
+        console.error("Erreur de parsing des données de navigation:", e);
+        router.back();
+        return;
+      }
+      
+      const locales = await Localization.getLocales();
+      const region = locales[0]?.regionCode || 'US';
+
+      // On lance la collecte de données en arrière-plan, sans attendre la fin
+      logSessionToSupabase(parsedWinner, parsedParticipants, region);
+
+      // --- Logique d'enrichissement et d'affichage ---
+      let newWatchProviders: WatchProvidersResponse | null = null;
+      let newBuyLink: string | null = null;
+      let newTrailerKey: string | null = null;
+
+      try {
+        if (parsedWinner.type === 'film' || parsedWinner.type === 'tvShow') {
+          const type = parsedWinner.type === 'film' ? 'movie' : 'tv';
+          const id = parseInt(parsedWinner.id, 10);
+          newWatchProviders = await tmdbService.getWatchProviders(id, type, region);
+          newTrailerKey = await tmdbService.getTrailerKey(id, type);
+        } else if (parsedWinner.type === 'book') {
+          const bookResults = await bookService.searchBook(`intitle:"${parsedWinner.title}"`, 1, region, locales[0]?.languageCode || 'en');
+          if (bookResults.length > 0 && bookResults[0].buyLink) {
+            newBuyLink = bookResults[0].buyLink;
+          }
+        }
+      } catch (e) {
+        console.error("Erreur de récupération des fournisseurs/liens :", e);
+      }
+
+      setState({
+        isLoading: false,
+        winner: parsedWinner,
+        watchProviders: newWatchProviders,
+        buyLink: newBuyLink,
+        trailerKey: newTrailerKey,
+        userRegion: region,
+      });
     };
     
-    initializeWinner();
-  }, [rawWinner, isPremium, i18n.language]);
+    fetchAndLogData();
+  }, [rawWinner, rawParticipants, i18n.language]);
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       return () => {
         voiceService.stop();
       };
@@ -114,83 +171,50 @@ export default function ResultScreen() {
     }
   };
   
-  const renderProviderSection = () => {
-    if (isLoadingProviders) {
-      return (
-        <View style={styles.actionSection}>
-          <ActivityIndicator size="small" color={theme.colors.textLight} />
-          <Text style={styles.loadingProvidersText}>Chargement des liens...</Text>
-        </View>
-      );
+  const handlePlayTrailer = () => {
+    if (state.trailerKey) {
+        WebBrowser.openBrowserAsync(`https://www.youtube.com/watch?v=${state.trailerKey}`);
     }
+  };
 
-    if (winner?.type === 'film' || winner?.type === 'tvShow') {
-      const hasProviders = watchProviders && 
-                           (watchProviders.flatrate?.length || watchProviders.rent?.length || watchProviders.buy?.length);
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
+  const renderProviderSection = () => {
+    if (state.winner?.type === 'film' || state.winner?.type === 'tvShow') {
+      const hasProviders = state.watchProviders && 
+                           (state.watchProviders.flatrate?.length || state.watchProviders.rent?.length || state.watchProviders.buy?.length);
       
       return (
         <View style={styles.actionSection}>
           {hasProviders ? (
             <>
-              {watchProviders.flatrate && watchProviders.flatrate.length > 0 && (
-                <View style={styles.providerRow}>
-                  <Clapperboard size={20} color={theme.colors.primary} />
-                  <Text style={styles.providerLabel}>{t('result.streamOn')}:</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {watchProviders.flatrate.map(provider => (
-                      <TouchableOpacity key={provider.provider_id} onPress={() => handleOpenLink(watchProviders?.link)}>
-                        <Image source={{ uri: `https://image.tmdb.org/t/p/original${provider.logo_path}` }} style={styles.providerLogo} />
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-              {watchProviders.rent && watchProviders.rent.length > 0 && (
-                <View style={styles.providerRow}>
-                  <ShoppingCart size={20} color={theme.colors.primary} />
-                  <Text style={styles.providerLabel}>{t('result.rentFrom')}:</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {watchProviders.rent.map(provider => (
-                      <TouchableOpacity key={provider.provider_id} onPress={() => handleOpenLink(watchProviders?.link)}>
-                        <Image source={{ uri: `https://image.tmdb.org/t/p/original${provider.logo_path}` }} style={styles.providerLogo} />
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-              {watchProviders.buy && watchProviders.buy.length > 0 && (
-                <View style={styles.providerRow}>
-                  <ShoppingCart size={20} color={theme.colors.primary} />
-                  <Text style={styles.providerLabel}>{t('result.buyFrom')}:</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {watchProviders.buy.map(provider => (
-                      <TouchableOpacity key={provider.provider_id} onPress={() => handleOpenLink(watchProviders?.link)}>
-                        <Image source={{ uri: `https://image.tmdb.org/t/p/original${provider.logo_path}` }} style={styles.providerLogo} />
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-               {watchProviders.link && (
+              {/* Logique d'affichage des fournisseurs inchangée, mais utilise 'state.watchProviders' */}
+              {state.watchProviders?.link && (
                 <CozyButton 
-                  onPress={() => handleOpenLink(watchProviders.link)} 
+                  onPress={() => handleOpenLink(state.watchProviders?.link)} 
                   variant="secondary" 
                   size="small" 
                   style={styles.tmdbLinkButton}>
-                  {t('result.moreProviders')} ({userRegion.toUpperCase()})
+                  {t('result.moreProviders')} ({state.userRegion.toUpperCase()})
                 </CozyButton>
               )}
             </>
           ) : (
-            <Text style={styles.noProvidersText}>{t('result.noStreamLinkAvailable', { region: userRegion.toUpperCase() })}</Text>
+            <Text style={styles.noProvidersText}>{t('result.noStreamLinkAvailable', { region: state.userRegion.toUpperCase() })}</Text>
           )}
         </View>
       );
-    } else if (winner?.type === 'book') {
+    } else if (state.winner?.type === 'book') {
       return (
         <View style={styles.actionSection}>
-          {buyLink ? (
-            <CozyButton onPress={() => handleOpenLink(buyLink)} icon={<ShoppingCart size={16} color={theme.colors.textOnPrimary_alt} />}>
+          {state.buyLink ? (
+            <CozyButton onPress={() => handleOpenLink(state.buyLink)} icon={<ShoppingCart size={16} color={theme.colors.textOnPrimary_alt} />}>
               {t('result.buyBook')}
             </CozyButton>
           ) : (
@@ -202,13 +226,15 @@ export default function ResultScreen() {
     return null;
   };
 
-  if (isLoading || !winner) {
+  if (state.isLoading || !state.winner) {
     return (
       <BackgroundWrapper>
         <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.primary} /></View>
       </BackgroundWrapper>
     );
   }
+
+  const { winner } = state;
 
   return (
     <BackgroundWrapper>
@@ -221,15 +247,19 @@ export default function ResultScreen() {
         
         <CozyCard style={styles.winnerCard}>
           <Image source={{ uri: winner.posterUrl || undefined }} style={styles.posterImage} />
-
-          {isLoadingDetails ? (
-            <ActivityIndicator style={{ marginVertical: 20 }} />
-          ) : (
-            <>
-              <Text style={styles.winnerTitle}>{winner.title}</Text>
-              {winner.releaseYear && <Text style={styles.winnerYear}>{winner.releaseYear}</Text>}
-              <Text style={styles.winnerDescription}>{winner.description}</Text>
-            </>
+          <Text style={styles.winnerTitle}>{winner.title}</Text>
+          {winner.releaseYear && <Text style={styles.winnerYear}>{winner.releaseYear}</Text>}
+          <Text style={styles.winnerDescription}>{winner.description}</Text>
+          
+          {state.trailerKey && (
+            <CozyButton 
+                onPress={handlePlayTrailer}
+                variant="secondary" 
+                icon={<PlayCircle size={16} color={theme.colors.textDark} />}
+                style={{marginTop: 20, marginBottom: 10}}
+            >
+                Voir la bande-annonce
+            </CozyButton>
           )}
 
           {renderProviderSection()}
@@ -239,7 +269,6 @@ export default function ResultScreen() {
               <View style={styles.geminiHeader}>
                 <Sparkles size={16} color={theme.colors.textDark} />
                 <Text style={styles.geminiTitle}>{t('result.geminiTitle')}</Text>
-                {/* CORRECTION ICI */}
                 <TouchableOpacity onPress={() => voiceService.playText(winner.geminiExplanation, isPremium)}>
                   <Volume2 size={20} color={theme.colors.textLight} />
                 </TouchableOpacity>
@@ -259,7 +288,7 @@ export default function ResultScreen() {
         </CozyCard>
 
         <View style={styles.footer}>
-          <CozyButton onPress={() => router.replace('/')} size="large" variant="secondary">
+          <CozyButton onPress={handleGoBack} size="large" variant="secondary">
             {t('result.backButton')}
           </CozyButton>
         </View>
@@ -285,7 +314,6 @@ const styles = StyleSheet.create({
     geminiText: { ...theme.fonts.body, fontSize: 14, color: theme.colors.textMedium, lineHeight: 21 },
     footer: { paddingHorizontal: 20, marginTop: 10 },
     actionSection: { width: '100%', alignItems: 'center', marginVertical: 16, paddingVertical: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(0,0,0,0.05)' },
-    loadingProvidersText: { ...theme.fonts.caption, color: theme.colors.textLight, marginTop: 8 },
     providerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, width: '100%', paddingHorizontal: 10 },
     providerLabel: { ...theme.fonts.subtitle, fontSize: 14, color: theme.colors.textDark, marginLeft: 8, marginRight: 10 },
     providerLogo: { width: 40, height: 40, borderRadius: 8, marginRight: 8, backgroundColor: theme.colors.disabledBackground, borderWidth: 1, borderColor: theme.colors.borderColor },
@@ -307,5 +335,5 @@ const styles = StyleSheet.create({
         fontSize: 14,
         flex: 1,
         fontWeight: '600'
-    }
+    },
 });

@@ -1,6 +1,6 @@
 // app/(tabs)/create-event.tsx
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sparkles, Check, User as UserIcon, Film, Book, Tv, Users, Home, HeartHandshake, Zap } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { recommendationService, ParticipantPreferences, EventCategory as RecommendationEventCategory } from '@/services/recommendationService';
@@ -29,7 +29,6 @@ interface Circle {
 export default function CreateEventScreen() {
   const router = useRouter();
   const { user, isPremium } = useAuth();
-  // MODIFICATION: On récupère l'instance i18n pour connaître la langue actuelle
   const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
 
@@ -42,9 +41,6 @@ export default function CreateEventScreen() {
   const [selectedCategoryState, setSelectedCategoryState] = useState<EventCategory | null>(null);
   const [conversationStep, setConversationStep] = useState(0);
   
-  // SUPPRESSION: L'état userLanguage et l'import de expo-localization ne sont plus nécessaires.
-  // const [userLanguage, setUserLanguage] = useState<string>('en');
-
   const KURIUS_BOTTOM_AREA_HEIGHT = 280; 
 
   useFocusEffect(
@@ -65,7 +61,6 @@ export default function CreateEventScreen() {
       
       loadInitialData();
 
-      // On réinitialise l'écran à chaque fois qu'il est affiché
       setEventType(null);
       setSelectedCircle(null);
       setSelectedLocalProfileIds([]);
@@ -100,7 +95,6 @@ export default function CreateEventScreen() {
     }
     setIsGenerating(true);
 
-    // MODIFICATION: On utilise i18n.language qui est toujours à jour
     const currentLanguage = i18n.language;
 
     if (eventType === 'local') {
@@ -117,7 +111,7 @@ export default function CreateEventScreen() {
       const recommendations = await recommendationService.generateRecommendations(
         participantsData, 
         selectedCategoryState, 
-        currentLanguage, // On passe la langue actuelle
+        currentLanguage,
       );
       
       const participantNames = participantsData.map(p => p.name);

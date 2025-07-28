@@ -1,6 +1,6 @@
 // app/(tabs)/memories.tsx
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
-import { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useState, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { getHistory, clearHistory } from '@/services/historyService';
 import { HistoryEvent } from '@/types';
@@ -29,14 +29,17 @@ const CategoryIcon = ({ category }: { category: HistoryEvent['category'] }) => {
 export default function MemoriesScreen() {
   const { t } = useTranslation();
   const [history, setHistory] = useState<HistoryEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const loadHistory = async () => {
+        setIsLoading(true);
         const savedHistory = await getHistory();
         setHistory(savedHistory);
+        setIsLoading(false);
       };
       loadHistory();
     }, [])
@@ -67,17 +70,10 @@ export default function MemoriesScreen() {
     });
   };
 
-  const HEADER_HEIGHT_APPROX = 60; 
-  const paddingTopForContent = insets.top + HEADER_HEIGHT_APPROX;
-
   return (
     <BackgroundWrapper backgroundImage={require('@/assets/images/groupe.png')} noOverlay={true}>
-      {/* ### MODIFICATION CI-DESSOUS ### */}
       <ScrollView 
-        style={[styles.container, { paddingTop: paddingTopForContent }]}
-        // On ajoute un style au conteneur interne de la ScrollView
-        // pour ajouter de l'espace en bas.
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 20, paddingBottom: 120 }]}
       >
         <View style={styles.header}>
             <Text style={styles.title}>{t('memories.title')}</Text>
@@ -89,7 +85,9 @@ export default function MemoriesScreen() {
         </View>
         <Text style={styles.subtitle}>{t('memories.subtitle')}</Text>
 
-        {history.length === 0 ? (
+        {isLoading ? (
+            <ActivityIndicator size="large" color={theme.colors.white} style={{ marginTop: 60 }} />
+        ) : history.length === 0 ? (
             <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>{t('memories.empty.title')}</Text>
                 <Text style={styles.emptySubtext}>{t('memories.empty.subtitle')}</Text>
@@ -135,15 +133,15 @@ export default function MemoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    header: { paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', position: 'relative', marginBottom: 8, },
+    container: { flex: 1, paddingHorizontal: 20 },
+    header: { alignItems: 'center', justifyContent: 'center', flexDirection: 'row', position: 'relative', marginBottom: 8 },
     title: { fontSize: 28, fontFamily: 'Comfortaa-SemiBold', color: theme.colors.white, textAlign: 'center', textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: 0, height: 2}, textShadowRadius: 8 },
     subtitle: { fontSize: 16, fontFamily: 'Nunito-Regular', color: theme.colors.white, textAlign: 'center', paddingHorizontal: 20, marginBottom: 20, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: 0, height: 1}, textShadowRadius: 6 },
-    resetButton: { position: 'absolute', right: 20, top: 0, bottom: 0, padding: 8, justifyContent: 'center', alignItems: 'center', },
+    resetButton: { position: 'absolute', right: 0, top: 0, bottom: 0, padding: 8, justifyContent: 'center', alignItems: 'center', },
     emptyContainer: { marginTop: 50, alignItems: 'center', padding: 20 },
     emptyText: { fontSize: 18, fontFamily: 'Nunito-SemiBold', color: theme.colors.white, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: 0, height: 1}, textShadowRadius: 6 },
     emptySubtext: { fontSize: 14, fontFamily: 'Nunito-Regular', color: theme.colors.white, textAlign: 'center', marginTop: 8, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: 0, height: 1}, textShadowRadius: 6 },
-    listContainer: { paddingHorizontal: 20, },
+    listContainer: { paddingHorizontal: 0 }, // Pas besoin de padding ici si le container principal en a déjà
     memoryCard: { marginBottom: 16 },
     cardContent: { flexDirection: 'row', gap: 15, alignItems: 'center' },
     itemImage: { width: 80, height: 120, borderRadius: 8, backgroundColor: theme.colors.disabledBackground },

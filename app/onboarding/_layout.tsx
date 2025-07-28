@@ -4,13 +4,11 @@ import React from 'react';
 
 export default function OnboardingLayout() {
   return (
-    // On ajoute screenOptions ici pour cacher le header pour toutes les pages de ce dossier
+    // On garde le Stack qui cache l'en-tête
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen
-        name="taste-wizard"
-        options={{
-          presentation: 'modal' // Garde l'effet de modale
-        }}
+      <Stack.Screen 
+        name="taste-wizard" 
+        // On retire simplement la section "options" qui forçait la présentation en modale
       />
     </Stack>
   );

@@ -13,7 +13,8 @@ export interface LocalProfile {
   films: FavoriteFilm[];
   books: FavoriteBook[];
   tvShows: FavoriteTvShow[];
-  ageRange?: 'child' | 'teen' | 'adult'; // CHAMP AJOUTÉ
+  ageRange?: 'child' | 'teen' | 'adult';
+  dislikedQlooIds?: string[]; // --- NOUVEAU : Ajout du champ pour les exclusions
 }
 
 export const getLocalProfiles = async (): Promise<LocalProfile[]> => {
@@ -37,13 +38,13 @@ export const saveLocalProfiles = async (profiles: LocalProfile[]): Promise<void>
 
 export const saveOrUpdateProfile = async (profile: Partial<LocalProfile>): Promise<LocalProfile[]> => {
     const profiles = await getLocalProfiles();
-    const existingIndex = profiles.findIndex(p => p.id === profile.id);
+    const existingIndex = profile.id ? profiles.findIndex(p => p.id === profile.id) : -1;
 
     if (existingIndex > -1) {
         profiles[existingIndex] = { ...profiles[existingIndex], ...profile } as LocalProfile;
     } else {
         const newProfile: LocalProfile = {
-            id: uuidv4(),
+            id: profile.id || uuidv4(),
             name: 'Nouveau Membre',
             avatarUri: null,
             films: [],

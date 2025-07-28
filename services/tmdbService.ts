@@ -44,10 +44,12 @@ export class TMDbService {
     }
     return true;
   }
-  
+
   async getWatchProviders(id: number, type: 'movie' | 'tv', region: string | undefined | null): Promise<WatchProvidersResponse | null> {
     if (!this.checkApiKey()) return null;
+    
     const effectiveRegion = region || 'US';
+
     try {
       const response = await axios.get(`${BASE_URL}/${type}/${id}/watch/providers`, {
         params: { api_key: this.apiKey }
@@ -110,12 +112,13 @@ export class TMDbService {
       return null;
     }
   }
-
-  async getMovieRecommendations(movieId: number, limit: number = 10, language: string = 'en-US'): Promise<MovieMetadata[]> {
+  
+  // --- NOUVELLE FONCTION CORRIGEANT L'ERREUR ---
+  async getMovieRecommendations(movieId: number, limit: number = 10): Promise<MovieMetadata[]> {
     if (!this.checkApiKey()) return [];
     try {
       const response = await axios.get(`${BASE_URL}/movie/${movieId}/recommendations`, {
-        params: { api_key: this.apiKey, language: language, page: 1 }
+        params: { api_key: this.apiKey }
       });
       return (response.data.results || []).slice(0, limit);
     } catch (error) {
@@ -124,23 +127,20 @@ export class TMDbService {
     }
   }
 
-  async getTvShowRecommendations(tvShowId: number, limit: number = 10, language: string = 'en-US'): Promise<TvShowMetadata[]> {
+  // --- NOUVELLE FONCTION CORRIGEANT L'ERREUR ---
+  async getTvShowRecommendations(tvId: number, limit: number = 10): Promise<TvShowMetadata[]> {
     if (!this.checkApiKey()) return [];
     try {
-      const response = await axios.get(`${BASE_URL}/tv/${tvShowId}/recommendations`, {
-        params: { api_key: this.apiKey, language: language, page: 1 }
+      const response = await axios.get(`${BASE_URL}/tv/${tvId}/recommendations`, {
+        params: { api_key: this.apiKey }
       });
       return (response.data.results || []).slice(0, limit);
     } catch (error) {
-      console.error(`Erreur TMDb (getTvShowRecommendations) pour l'ID ${tvShowId}:`, error);
+      console.error(`Erreur TMDb (getTvShowRecommendations) pour l'ID ${tvId}:`, error);
       return [];
     }
   }
-
-  getImageUrl(posterPath: string | null | undefined): string {
-    return posterPath ? `${IMAGE_BASE_URL}${posterPath}` : '';
-  }
-
+  
   async getClassicOrHighlyRatedMovies(language: string, ageRange: 'child' | 'teen' | 'adult'): Promise<MovieMetadata[]> {
     if (!this.checkApiKey()) return [];
     const params: any = {
@@ -153,14 +153,10 @@ export class TMDbService {
 
     switch (ageRange) {
       case 'child':
-        params.with_genres = '16|10751'; // Animation & Famille
-        // --- CORRECTION CI-DESSOUS ---
-        // On retire ces filtres trop restrictifs
-        // params.certification_country = 'FR';
-        // params.certification = 'U';
+        params.with_genres = '16|10751';
         break;
       case 'teen':
-        params.with_genres = '12|14|878'; // Aventure, Fantastique, Science-Fiction
+        params.with_genres = '12|14|878';
         params['vote_average.gte'] = 7;
         break;
       case 'adult':
@@ -190,14 +186,14 @@ export class TMDbService {
 
     switch (ageRange) {
       case 'child':
-        params.with_genres = '16|10762'; // Animation & Kids
+        params.with_genres = '16|10762';
         break;
       case 'teen':
-        params.with_genres = '10759|10765'; // Action & Aventure, Science-Fiction & Fantastique
+        params.with_genres = '10759|10765';
         params['vote_average.gte'] = 7;
         break;
       case 'adult':
-        params.with_genres = '18|80|99'; // Drame, Crime, Documentaire
+        params.with_genres = '18|80|99';
         params['vote_average.gte'] = 7.5;
         break;
     }
@@ -209,6 +205,25 @@ export class TMDbService {
       console.error(`Erreur TMDb (getClassicOrHighlyRatedTvShows) pour ageRange ${ageRange}:`, error);
       return [];
     }
+  }
+
+  async getTrailerKey(id: number, type: 'movie' | 'tv'): Promise<string | null> {
+    if (!this.checkApiKey()) return null;
+    try {
+        const response = await axios.get(`${BASE_URL}/${type}/${id}/videos`, {
+            params: { api_key: this.apiKey, language: 'en-US' }
+        });
+        const videos = response.data.results;
+        const trailer = videos.find((video: any) => video.site === 'YouTube' && video.type === 'Trailer');
+        return trailer ? trailer.key : null;
+    } catch (error) {
+        console.error(`Erreur TMDb (getTrailerKey) pour l'ID ${id}:`, error);
+        return null;
+    }
+  }
+
+  getImageUrl(posterPath: string | null | undefined): string {
+    return posterPath ? `${IMAGE_BASE_URL}${posterPath}` : '';
   }
 }
 

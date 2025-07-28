@@ -322,6 +322,10 @@
       "adult": "Adulte",
       "adult_range": "(18+ ans)"
     },
+    "genres": {
+      "title": "Quels sont vos genres préférés ?",
+      "subtitle": "Choisissez-en quelques-uns pour commencer."
+    },
     "movies": {
       "title": "Pour commencer, quels films aimez-vous ?",
       "subtitle": "Sélectionnez-en au moins {{count}} pour nous donner une idée."
@@ -343,6 +347,43 @@
     "nextButton": "Suivant",
     "finishButton": "Terminer",
     "skipButtonInitial": "Passer pour le moment",
-    "skipButtonLater": "Terminer et sauter cette étape"
+    "skipButtonLater": "Terminer et sauter cette étape",
+    "noSuggestions": "Aucune suggestion trouvée pour ces genres. Essayez-en d'autres !"
+  },
+  "genres": {
+    "animation": "Animation",
+    "family": "Famille",
+    "adventure": "Aventure",
+    "fantasy": "Fantastique",
+    "kids": "Enfants",
+    "comedy": "Comédie",
+    "picture_book": "Livre Illustré",
+    "science_fiction": "Science-Fiction",
+    "action": "Action",
+    "horror": "Horreur",
+    "sci_fi_fantasy": "Sci-Fi & Fantastique",
+    "action_adventure": "Action & Aventure",
+    "drama": "Drame",
+    "young_adult": "Young Adult",
+    "thriller": "Thriller",
+    "crime": "Policier",
+    "documentary": "Documentaire",
+    "classic": "Classique",
+    "historical_fiction": "Fiction Historique",
+    "non_fiction": "Non-Fiction",
+    "romance": "Romance",
+    "musical": "Comédie Musicale",
+    "mystery": "Mystère",
+    "manga": "Manga",
+    "dystopian": "Dystopie",
+    "western": "Western",
+    "film_noir": "Film Noir",
+    "war": "Guerre",
+    "swashbuckler": "Cape et d'épée",
+    "sitcom": "Sitcom",
+    "historical": "Historique",
+    "biography": "Biographie",
+    "philosophy": "Philosophie",
+    "poetry": "Poésie"
   }
 }

@@ -1,7 +1,7 @@
 // services/geminiService.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { EventCategory } from './recommendationService';
-import { qlooService, QLOO_ENTITY_TYPES } from './qlooService';
+import { qlooService } from './qlooService';
 import { tmdbService } from './tmdbService';
 
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -41,9 +41,8 @@ export class GeminiService {
       ? (workType === 'tvShow' ? 'TV show' : workType) 
       : (workType === 'film' ? 'film' : (workType === 'book' ? 'livre' : 'série'));
     
-    // NOUVELLE STRATEGIE POUR L'INSTRUCTION DE LANGUE
     let outputLanguageInstruction: string;
-    let negativeLanguageInstruction: string = ''; // Instruction négative
+    let negativeLanguageInstruction: string = '';
 
     if (isEnglish) {
         outputLanguageInstruction = "Your response MUST be entirely in English.";
@@ -99,9 +98,8 @@ export class GeminiService {
     const isEnglish = userLanguage === 'en';
     const categoryLabel = isEnglish ? (category === 'tvShow' ? 'TV show' : category) : (category === 'film' ? 'film' : (category === 'book' ? 'livre' : 'série'));
     
-    // NOUVELLE STRATEGIE POUR L'INSTRUCTION DE LANGUE
     let outputLanguageInstruction: string;
-    let negativeLanguageInstruction: string = ''; // Instruction négative
+    let negativeLanguageInstruction: string = '';
 
     if (isEnglish) {
         outputLanguageInstruction = "Your response MUST be entirely in English.";
@@ -156,13 +154,13 @@ export class GeminiService {
           parsedResponse.next_question = isEnglish ? "Could you tell me more about that?" : "Pourriez-vous m'en dire plus ?";
       }
 
-      const qlooEntityIds: string[] = []; // Collecte les UUIDs bruts
+      const qlooEntityIds: string[] = [];
       for (const term of parsedResponse.qloo_search_terms) {
         let searchType: 'film' | 'book' | 'tvShow' | 'music' = category;
         
         const qlooSearchResult = await qlooService.searchContent({ title: term.query, year: term.year }, searchType, 2);
         
-        const entityIdFromQlooSearch = qlooSearchResult[0]?.entity_id; // C'est l'UUID brut que Qloo retourne
+        const entityIdFromQlooSearch = qlooSearchResult?.[0]?.entity_id;
 
         if (entityIdFromQlooSearch && typeof entityIdFromQlooSearch === 'string' && entityIdFromQlooSearch.length > 0) {
           qlooEntityIds.push(entityIdFromQlooSearch);
@@ -187,8 +185,6 @@ export class GeminiService {
     }
   }
 
-  // NOTE : formatPreferences génère des listes de titres tels qu'ils sont stockés (probablement en français).
-  // L'instruction de langue dans le prompt Gemini ci-dessus est censée gérer cela.
   private formatPreferences(preferences: Record<string, any>, isEnglish: boolean): string {
     const filmLabel = isEnglish ? 'Movies' : 'Films';
     const bookLabel = isEnglish ? 'Books' : 'Livres';

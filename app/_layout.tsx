@@ -49,8 +49,12 @@ export default function RootLayout() {
           <Stack.Screen name="result-screen" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
           {/* Le layout pour l'authentification */}
           <Stack.Screen name="auth" options={{ headerShown: false }} />
-           {/* Le layout pour l'onboarding */}
-          <Stack.Screen name="onboarding" options={{ headerShown: false, presentation: 'modal' }} />
+           
+          {/* --- DÉBUT DE LA CORRECTION --- */}
+          {/* On retire "presentation: 'modal'" pour que la section s'ouvre en plein écran */}
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          {/* --- FIN DE LA CORRECTION --- */}
+
         </Stack>
         {/* Le composant Toast doit être à la racine pour être visible partout */}
         <Toast />
