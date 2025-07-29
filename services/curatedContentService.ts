@@ -14,7 +14,7 @@ export const getCuratedBooks = (language: 'fr' | 'en', ageRange: 'child' | 'teen
             case 'teen': return curatedFrenchBooksTeen;
             default: return curatedFrenchBooksAdult;
         }
-    }
+    } 
     switch (ageRange) {
         case 'child': return curatedEnglishBooksChild;
         case 'teen': return curatedEnglishBooksTeen;
@@ -22,7 +22,7 @@ export const getCuratedBooks = (language: 'fr' | 'en', ageRange: 'child' | 'teen
     }
 };
 
-// --- MODIFICATION MAJEURE : Listes de genres beaucoup plus complètes ---
+// --- MODIFICATION MAJEURE : Les clés de genre sont maintenant des identifiants neutres pour la traduction ---
 export const genresWithExamples = {
   child: {
     film: {
@@ -50,27 +50,20 @@ export const genresWithExamples = {
       comedy: ['Back to the Future', 'Mean Girls'],
       action: ['The Dark Knight', 'Mad Max: Fury Road'],
       horror: ['Get Out', 'A Quiet Place'],
-      animation: ['Spirited Away', 'Akira'],
-      thriller: ['The Silence of the Lambs', 'Seven'],
-      drama: ['Forrest Gump', 'The Truman Show'],
-      romance: ['The Fault in Our Stars', 'To All the Boys I\'ve Loved Before'],
-      musical: ['La La Land', 'The Greatest Showman']
+      animation: ['Spirited Away', 'Akira']
     },
     tvShow: {
       sci_fi_fantasy: ['Stranger Things', 'Doctor Who'],
       action_adventure: ['The Mandalorian', 'Sherlock'],
       drama: ['The Queen\'s Gambit', 'One Day'],
       comedy: ['Brooklyn Nine-Nine', 'Ted Lasso'],
-      animation: ['Arcane', 'Rick and Morty'],
-      mystery: ['Twin Peaks', 'Black Mirror']
+      animation: ['Arcane', 'Rick and Morty']
     },
     book: {
       young_adult: ['The Hunger Games', 'Six of Crows'],
       fantasy: ['Eragon', 'His Dark Materials'],
       science_fiction: ["Ender's Game", 'The Hitchhiker\'s Guide to the Galaxy'],
-      horror: ['It by Stephen King', 'Dracula'],
-      manga: ['Attack on Titan', 'Death Note'],
-      dystopian: ['The Maze Runner', 'Divergent']
+      horror: ['It by Stephen King', 'Dracula']
     }
   },
   adult: {
@@ -83,40 +76,27 @@ export const genresWithExamples = {
       adventure: ['Indiana Jones and the Raiders of the Lost Ark', 'Jurassic Park'],
       horror: ['The Shining', 'Hereditary'],
       animation: ['Spirited Away', 'Ghost in the Shell'],
-      documentary: ['Planet Earth', 'Man on Wire'],
-      romance: ['Pride & Prejudice', 'Before Sunrise'],
-      historical: ['Schindler\'s List', 'Gladiator'],
-      western: ['The Good, the Bad and the Ugly', 'Django Unchained'],
-      film_noir: ['The Maltese Falcon', 'Double Indemnity'],
-      musical: ['Singin\' in the Rain', 'Les Misérables'],
-      war: ['Saving Private Ryan', 'Apocalypse Now'],
-      swashbuckler: ['The Princess Bride', 'The Mask of Zorro'] // Cape et d'épée
+      documentary: ['Planet Earth', 'Man on Wire']
     },
     tvShow: {
       drama: ['Breaking Bad', 'Succession'],
       thriller: ['True Detective', 'Mindhunter'],
       comedy: ['Fleabag', 'The Office'],
       crime: ['The Sopranos', 'Ozark'],
-      sci_fi_fantasy: ['Black Mirror', 'The Expanse'],
-      documentary: ['Chernobyl', 'The Last Dance'],
-      historical: ['The Crown', 'Band of Brothers'],
-      sitcom: ['Seinfeld', 'Curb Your Enthusiasm']
+      sci_fi_fantasy: ['Black Mirror', 'The Expanse']
     },
     book: {
       classic: ['1984 by George Orwell', 'To Kill a Mockingbird'],
       thriller: ['Gone Girl', 'The Silent Patient'],
       historical_fiction: ['All the Light We Cannot See', 'The Song of Achilles'],
       non_fiction: ['Sapiens: A Brief History of Humankind', 'Educated by Tara Westover'],
-      science_fiction: ['Dune', 'Foundation'],
-      philosophy: ['Meditations by Marcus Aurelius', "L'Étranger"],
-      biography: ['Steve Jobs by Walter Isaacson', 'The Diary of a Young Girl'],
-      poetry: ['The Waste Land by T.S. Eliot', 'Ariel by Sylvia Plath']
+      science_fiction: ['Dune', 'Foundation']
     }
   }
 };
 
 export const getGenreNamesForCategory = (
-  category: 'film' | 'tvShow' | 'book',
+  category: 'film' | 'tvShow' | 'book', 
   ageRange: 'child' | 'teen' | 'adult'
 ) => {
     return Object.keys(genresWithExamples[ageRange][category]);

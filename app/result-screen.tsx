@@ -16,12 +16,9 @@ import { voiceService } from '@/services/voiceService';
 import { theme } from '@/constants/Theme';
 import { useAuth } from '@/contexts/AuthContext';
 import * as WebBrowser from 'expo-web-browser';
-
-// --- AMÉLIORATION : Imports pour la collecte de données ---
 import { supabase } from '@/lib/supabase';
 import { getLocalProfiles, LocalProfile } from '@/services/localProfileService';
 
-// --- AMÉLIORATION : État unifié pour plus de clarté ---
 interface ScreenState {
   isLoading: boolean;
   winner: EnrichedRecommendation | null;
@@ -33,16 +30,15 @@ interface ScreenState {
 
 export default function ResultScreen() {
   const router = useRouter();
-  const { 
-    winner: rawWinner, 
-    participants: rawParticipants, 
-    wasExplanationVisible: rawWasExplanationVisible 
+  const {
+    winner: rawWinner,
+    participants: rawParticipants,
+    wasExplanationVisible: rawWasExplanationVisible
   } = useLocalSearchParams();
-  
+
   const { t, i18n } = useTranslation();
   const { isPremium } = useAuth();
 
-  // --- AMÉLIORATION : Utilisation de l'état unifié ---
   const [state, setState] = useState<ScreenState>({
     isLoading: true,
     winner: null,
@@ -54,10 +50,9 @@ export default function ResultScreen() {
 
   const wasExplanationVisible = rawWasExplanationVisible === 'true';
 
-  // --- AMÉLIORATION : Logique de collecte de données extraite dans une fonction dédiée ---
   const logSessionToSupabase = async (
-    winner: EnrichedRecommendation, 
-    participants: string[], 
+    winner: EnrichedRecommendation,
+    participants: string[],
     region: string
   ) => {
     try {
@@ -86,8 +81,6 @@ export default function ResultScreen() {
 
       if (error) {
         console.error("Erreur lors de la journalisation de la session:", error);
-      } else {
-        console.log("Session de recommandation journalisée avec succès.");
       }
     } catch (logError) {
       console.error("Erreur de préparation pour la journalisation:", logError);
@@ -96,11 +89,8 @@ export default function ResultScreen() {
 
   useEffect(() => {
     const fetchAndLogData = async () => {
-      // --- AMÉLIORATION : Robustesse accrue ---
       if (!rawWinner || typeof rawWinner !== 'string' || !rawParticipants || typeof rawParticipants !== 'string') {
-        console.error("Données de navigation invalides ou manquantes.");
-        if(router.canGoBack()) router.back();
-        else router.replace('/');
+        router.replace('/');
         return;
       }
 
@@ -110,7 +100,6 @@ export default function ResultScreen() {
         parsedWinner = JSON.parse(rawWinner);
         parsedParticipants = JSON.parse(rawParticipants);
       } catch (e) {
-        console.error("Erreur de parsing des données de navigation:", e);
         router.back();
         return;
       }
@@ -118,10 +107,8 @@ export default function ResultScreen() {
       const locales = await Localization.getLocales();
       const region = locales[0]?.regionCode || 'US';
 
-      // On lance la collecte de données en arrière-plan, sans attendre la fin
       logSessionToSupabase(parsedWinner, parsedParticipants, region);
 
-      // --- Logique d'enrichissement et d'affichage ---
       let newWatchProviders: WatchProvidersResponse | null = null;
       let newBuyLink: string | null = null;
       let newTrailerKey: string | null = null;
@@ -130,8 +117,10 @@ export default function ResultScreen() {
         if (parsedWinner.type === 'film' || parsedWinner.type === 'tvShow') {
           const type = parsedWinner.type === 'film' ? 'movie' : 'tv';
           const id = parseInt(parsedWinner.id, 10);
-          newWatchProviders = await tmdbService.getWatchProviders(id, type, region);
-          newTrailerKey = await tmdbService.getTrailerKey(id, type);
+          [newWatchProviders, newTrailerKey] = await Promise.all([
+            tmdbService.getWatchProviders(id, type, region),
+            tmdbService.getTrailerKey(id, type)
+          ]);
         } else if (parsedWinner.type === 'book') {
           const bookResults = await bookService.searchBook(`intitle:"${parsedWinner.title}"`, 1, region, locales[0]?.languageCode || 'en');
           if (bookResults.length > 0 && bookResults[0].buyLink) {
@@ -153,7 +142,7 @@ export default function ResultScreen() {
     };
     
     fetchAndLogData();
-  }, [rawWinner, rawParticipants, i18n.language]);
+  }, [rawWinner, rawParticipants]);
 
   useFocusEffect(
     useCallback(() => {
@@ -163,7 +152,7 @@ export default function ResultScreen() {
     }, [])
   );
 
-  const handleOpenLink = (url: string | undefined | null) => { 
+  const handleOpenLink = (url: string | undefined | null) => {
     if (url) {
       Linking.openURL(url).catch(err => Alert.alert("Erreur", "Impossible d'ouvrir ce lien."));
     } else {
@@ -187,29 +176,45 @@ export default function ResultScreen() {
 
   const renderProviderSection = () => {
     if (state.winner?.type === 'film' || state.winner?.type === 'tvShow') {
-      const hasProviders = state.watchProviders && 
-                           (state.watchProviders.flatrate?.length || state.watchProviders.rent?.length || state.watchProviders.buy?.length);
-      
-      return (
-        <View style={styles.actionSection}>
-          {hasProviders ? (
-            <>
-              {/* Logique d'affichage des fournisseurs inchangée, mais utilise 'state.watchProviders' */}
-              {state.watchProviders?.link && (
-                <CozyButton 
-                  onPress={() => handleOpenLink(state.watchProviders?.link)} 
-                  variant="secondary" 
-                  size="small" 
-                  style={styles.tmdbLinkButton}>
-                  {t('result.moreProviders')} ({state.userRegion.toUpperCase()})
-                </CozyButton>
-              )}
-            </>
-          ) : (
+      // --- DÉBUT DE LA CORRECTION DÉFINITIVE ---
+      // On assigne state.watchProviders à une constante locale après la vérification.
+      // Cela garantit à TypeScript que `providers` n'est pas null dans ce bloc.
+      const providers = state.watchProviders;
+      if (providers) {
+        return (
+          <View style={styles.actionSection}>
+            {providers.flatrate && providers.flatrate.length > 0 && (
+              <View style={styles.providerRow}>
+                <Clapperboard size={20} color={theme.colors.primary} />
+                <Text style={styles.providerLabel}>{t('result.streamOn')}:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {providers.flatrate.map(provider => (
+                    <TouchableOpacity key={provider.provider_id} onPress={() => handleOpenLink(providers.link)}>
+                      <Image source={{ uri: `https://image.tmdb.org/t/p/original${provider.logo_path}` }} style={styles.providerLogo} />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+            {providers.link && (
+              <CozyButton 
+                onPress={() => handleOpenLink(providers.link)} 
+                variant="secondary" 
+                size="small" 
+                style={styles.tmdbLinkButton}>
+                {t('result.moreProviders')} ({state.userRegion.toUpperCase()})
+              </CozyButton>
+            )}
+          </View>
+        );
+      } else {
+        return (
+          <View style={styles.actionSection}>
             <Text style={styles.noProvidersText}>{t('result.noStreamLinkAvailable', { region: state.userRegion.toUpperCase() })}</Text>
-          )}
-        </View>
-      );
+          </View>
+        );
+      }
+      // --- FIN DE LA CORRECTION ---
     } else if (state.winner?.type === 'book') {
       return (
         <View style={styles.actionSection}>

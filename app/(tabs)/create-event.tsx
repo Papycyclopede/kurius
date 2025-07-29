@@ -1,7 +1,7 @@
 // app/(tabs)/create-event.tsx
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image, Modal } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
-import { Sparkles, Check, User as UserIcon, Film, Book, Tv, Users, Home, HeartHandshake, Zap } from 'lucide-react-native';
+import { Sparkles, Check, User as UserIcon, Film, Book, Tv, Users, Home, HeartHandshake, Zap, X } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { recommendationService, ParticipantPreferences, EventCategory as RecommendationEventCategory } from '@/services/recommendationService';
 import { getLocalProfiles, LocalProfile } from '@/services/localProfileService';
@@ -76,16 +76,26 @@ export default function CreateEventScreen() {
 
   const handleSelectCategory = (category: EventCategory) => {
     setSelectedCategoryState(category);
-    setConversationStep(2);
+    if (eventType === 'local') {
+        setConversationStep(2);
+    } else if (eventType === 'circle') {
+        setConversationStep(3);
+    }
   };
 
   const handleSelectCircle = (circle: Circle) => {
     setSelectedCircle(circle);
-    setConversationStep(3);
+    setConversationStep(4);
   };
   
   const handleMemberToggle = (profileId: string) => {
     setSelectedLocalProfileIds(prev => prev.includes(profileId) ? prev.filter(id => id !== profileId) : [...prev, profileId]);
+  };
+
+  const handleConfirmMembers = () => {
+    if (selectedLocalProfileIds.length > 0) {
+      setConversationStep(4);
+    }
   };
   
   const handleGenerate = async () => {
@@ -158,14 +168,13 @@ export default function CreateEventScreen() {
     const hasCircles = availableCircles.length > 0;
     switch(conversationStep) {
       case 0:
-        return (isPremium && hasCircles)
-          ? t('createEvent.dialogue.step0_premium')
-          : t('createEvent.dialogue.step1');
+        return (isPremium && hasCircles) ? t('createEvent.dialogue.step0_premium') : t('createEvent.dialogue.step1');
       case 1:
         return t('createEvent.dialogue.step1');
       case 2:
-        return t('createEvent.dialogue.step2');
       case 3:
+        return t('createEvent.dialogue.step2');
+      case 4:
         return t('createEvent.dialogue.step4_generate');
       default:
         return '';
@@ -220,31 +229,8 @@ export default function CreateEventScreen() {
             </CozyCard>
           </View>
         )}
-
-        {conversationStep === 2 && eventType === 'local' && (
-           <View style={styles.sectionContainer}>
-             <CozyCard style={styles.memberSelectionCard}>
-                <View style={styles.membersGrid}>
-                  {localProfiles.map((member) => (
-                      <TouchableOpacity key={member.id} style={[styles.memberCard, selectedLocalProfileIds.includes(member.id) && styles.memberCardSelected]} onPress={() => handleMemberToggle(member.id)}>
-                        {member.avatarUri ? <Image source={{uri: member.avatarUri}} style={styles.memberAvatarImage} /> : <View style={styles.memberAvatarPlaceholder}><UserIcon color="#8B6F47" size={32}/></View>}
-                        <Text style={styles.memberName}>{member.name}</Text>
-                        {selectedLocalProfileIds.includes(member.id) && (<View style={styles.memberCheck}><Check size={12} color="#FFF8E7" strokeWidth={3} /></View>)}
-                      </TouchableOpacity>
-                  ))}
-                </View>
-                <CozyButton 
-                  onPress={() => setConversationStep(3)}
-                  disabled={selectedLocalProfileIds.length === 0}
-                  style={{ marginTop: 12 }}
-                >
-                  {t('common.continue')}
-                </CozyButton>
-             </CozyCard>
-           </View>
-        )}
         
-        {conversationStep === 2 && eventType === 'circle' && (
+        {conversationStep === 3 && eventType === 'circle' && (
           <View style={styles.sectionContainer}>
             {availableCircles.map(circle => (
               <TouchableOpacity key={circle.id} onPress={() => handleSelectCircle(circle)}>
@@ -254,7 +240,7 @@ export default function CreateEventScreen() {
           </View>
         )}
         
-        {conversationStep === 3 && (
+        {conversationStep === 4 && (
             <View style={styles.generationContainer}>
                 <CozyButton onPress={handleGenerate} disabled={isGenerating} icon={<Sparkles size={16} color={theme.colors.textOnPrimary_alt} />} size="large" style={{marginTop: 20}}>
                   {isGenerating ? t('createEvent.generateButtonLoading') : t('createEvent.generateButton')}
@@ -263,6 +249,40 @@ export default function CreateEventScreen() {
         )}
 
       </ScrollView>
+
+      <Modal
+        visible={conversationStep === 2 && eventType === 'local'}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setConversationStep(1)}
+      >
+        <View style={styles.modalBackdrop}>
+          <CozyCard style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('createEvent.dialogue.step2')}</Text>
+              <TouchableOpacity onPress={() => setConversationStep(1)}>
+                <X size={24} color={theme.colors.textLight} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.membersGrid}>
+              {localProfiles.map((member) => (
+                  <TouchableOpacity key={member.id} style={[styles.memberCard, selectedLocalProfileIds.includes(member.id) && styles.memberCardSelected]} onPress={() => handleMemberToggle(member.id)}>
+                    {member.avatarUri ? <Image source={{uri: member.avatarUri}} style={styles.memberAvatarImage} /> : <View style={styles.memberAvatarPlaceholder}><UserIcon color="#8B6F47" size={32}/></View>}
+                    <Text style={styles.memberName}>{member.name}</Text>
+                    {selectedLocalProfileIds.includes(member.id) && (<View style={styles.memberCheck}><Check size={12} color="#FFF8E7" strokeWidth={3} /></View>)}
+                  </TouchableOpacity>
+              ))}
+            </View>
+            <CozyButton 
+              onPress={handleConfirmMembers}
+              disabled={selectedLocalProfileIds.length === 0}
+              style={{ marginTop: 20 }}
+            >
+              {t('common.continue')}
+            </CozyButton>
+          </CozyCard>
+        </View>
+      </Modal>
 
       <View style={[styles.kuriusFixedBottomContainer, { paddingBottom: insets.bottom }]}>
         <View style={styles.kuriusBubbleContainer}>
@@ -465,5 +485,28 @@ const styles = StyleSheet.create({
   generationContainer: { 
     alignItems: 'center', 
     marginTop: 40 
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.background,
+    padding: 20,
+    borderTopLeftRadius: theme.sizing.borderRadiusCard,
+    borderTopRightRadius: theme.sizing.borderRadiusCard,
+    paddingBottom: 40,
+    marginBottom: 0,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    ...theme.fonts.subtitle,
+    fontSize: 20,
   },
 });

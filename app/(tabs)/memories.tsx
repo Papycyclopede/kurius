@@ -63,16 +63,23 @@ export default function MemoriesScreen() {
     );
   };
 
+  // --- CORRECTION 2 : La navigation envoie maintenant tous les paramètres attendus ---
   const handleMemoryPress = (event: HistoryEvent) => {
-    router.push({ 
-      pathname: '/result-screen', 
-      params: { winner: JSON.stringify(event.chosenItem) } 
+    router.push({
+      pathname: '/result-screen',
+      params: {
+        winner: JSON.stringify(event.chosenItem),
+        participants: JSON.stringify(event.participants),
+        wasExplanationVisible: 'true' // Un souvenir a toujours l'explication visible
+      }
     });
   };
 
   return (
     <BackgroundWrapper backgroundImage={require('@/assets/images/groupe.png')} noOverlay={true}>
-      <ScrollView 
+      {/* --- CORRECTION 1 : Le ScrollView a maintenant un style flex: 1 pour permettre le défilement --- */}
+      <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={[styles.container, { paddingTop: insets.top + 20, paddingBottom: 120 }]}
       >
         <View style={styles.header}>
@@ -95,14 +102,14 @@ export default function MemoriesScreen() {
         ) : (
             <View style={styles.listContainer}>
               {history.map((event, index) => (
-                  <Animated.View 
+                  <Animated.View
                     key={event.id}
                     entering={FadeInDown.delay(index * 100).duration(400).springify().damping(12)}
                   >
                     <TouchableOpacity onPress={() => handleMemoryPress(event)} activeOpacity={0.8}>
                       <CozyCard style={styles.memoryCard}>
                           <View style={styles.cardContent}>
-                              {event.chosenItem.posterUrl && 
+                              {event.chosenItem.posterUrl &&
                                   <Image source={{ uri: event.chosenItem.posterUrl }} style={styles.itemImage} />
                               }
                               <View style={styles.infoContainer}>
@@ -133,7 +140,7 @@ export default function MemoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingHorizontal: 20 },
+    container: { flexGrow: 1, paddingHorizontal: 20 },
     header: { alignItems: 'center', justifyContent: 'center', flexDirection: 'row', position: 'relative', marginBottom: 8 },
     title: { fontSize: 28, fontFamily: 'Comfortaa-SemiBold', color: theme.colors.white, textAlign: 'center', textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: 0, height: 2}, textShadowRadius: 8 },
     subtitle: { fontSize: 16, fontFamily: 'Nunito-Regular', color: theme.colors.white, textAlign: 'center', paddingHorizontal: 20, marginBottom: 20, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: 0, height: 1}, textShadowRadius: 6 },
@@ -141,7 +148,7 @@ const styles = StyleSheet.create({
     emptyContainer: { marginTop: 50, alignItems: 'center', padding: 20 },
     emptyText: { fontSize: 18, fontFamily: 'Nunito-SemiBold', color: theme.colors.white, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: 0, height: 1}, textShadowRadius: 6 },
     emptySubtext: { fontSize: 14, fontFamily: 'Nunito-Regular', color: theme.colors.white, textAlign: 'center', marginTop: 8, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: 0, height: 1}, textShadowRadius: 6 },
-    listContainer: { paddingHorizontal: 0 }, // Pas besoin de padding ici si le container principal en a déjà
+    listContainer: { paddingHorizontal: 0 },
     memoryCard: { marginBottom: 16 },
     cardContent: { flexDirection: 'row', gap: 15, alignItems: 'center' },
     itemImage: { width: 80, height: 120, borderRadius: 8, backgroundColor: theme.colors.disabledBackground },

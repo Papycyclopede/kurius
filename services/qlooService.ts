@@ -29,21 +29,33 @@ export class QlooService {
   private apiKey = API_KEY;
 
   async getRecommendations(
-    entityUrns: string, // MODIFICATION ICI : Accepte maintenant une chaîne de caractères
+    entityUrns: string,
     type: 'film' | 'book' | 'music' | 'tvShow',
-    count: number = 10
+    count: number = 10,
+    exclusionUrns?: string,
+    region?: string // --- NOUVEAU : Ajout du paramètre region
   ): Promise<QlooRecommendation[]> {
     if (!this.apiKey) throw new Error("Clé API Qloo manquante.");
-    if (!entityUrns || entityUrns.length === 0) return []; // Vérifie si la chaîne est vide
+    if (!entityUrns || entityUrns.length === 0) return [];
 
     try {
-      // On utilise une requête GET
+      const params: any = {
+        'signal.interests.entities': entityUrns,
+        'filter.type': QLOO_ENTITY_TYPES[type],
+        'take': count,
+      };
+
+      if (exclusionUrns && exclusionUrns.length > 0) {
+        params['signal.exclusions.entities'] = exclusionUrns;
+      }
+      
+      // --- NOUVEAU : Ajout de la région à la requête ---
+      if (region) {
+        params['region'] = region;
+      }
+
       const response = await axios.get(`${API_BASE_URL}/v2/insights`, {
-        params: {
-          'signal.interests.entities': entityUrns, // Pas de join ici, car déjà une chaîne
-          'filter.type': QLOO_ENTITY_TYPES[type],
-          'take': count,
-        },
+        params,
         headers: { 
           'X-Api-Key': this.apiKey, 
           'Accept': 'application/json'
@@ -59,7 +71,7 @@ export class QlooService {
       return [];
     }
   }
-
+  
   async searchContent(searchData: SearchData, type: 'film' | 'book' | 'music' | 'tvShow', limit: number = 5): Promise<any[]> {
     if (!this.apiKey) return [];
     try {
@@ -92,7 +104,6 @@ export class QlooService {
       film: [{ title: 'Le Voyage de Chihiro', score: 95 }, { title: 'The Grand Budapest Hotel', score: 92 }, { title: 'Parasite', score: 91 }],
       book: [{ title: 'Le Petit Prince', score: 94 }, { title: '1984', score: 91 }, { title: 'Dune', score: 90 }],
       tvShow: [{ title: 'Fleabag', score: 93 }, { title: 'Arcane', score: 92 }, { title: 'Chernobyl', score: 90 }],
-      music: []
     };
     return fallbacks[type].slice(0, count).map((item, index) => ({ id: `fallback_${type}_${index}`, title: item.title, type: type, score: item.score, metadata: {} }));
   }

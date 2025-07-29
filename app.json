@@ -39,7 +39,13 @@
     "owner": "alexandre_sanchez",
     "runtimeVersion": "1.0.0",
     "updates": {
-      "url": "https://u.expo.dev/e7193836-8dd3-4d02-945b-3f410ea2b073"
+      "url": "https://u.expo.dev/3c4acf11-23e7-443e-8f87-9a903d1aca2d"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3c4acf11-23e7-443e-8f87-9a903d1aca2d"
+      }
     }
   }
 }

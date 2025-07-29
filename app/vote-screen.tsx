@@ -52,11 +52,12 @@ export default function ChoiceScreen() {
 
     const wasExplanationVisible = isPremium || index === 0;
 
+    // --- CORRECTION : On passe maintenant les participants à l'écran de résultat ---
     router.replace({ 
       pathname: '/result-screen', 
       params: { 
         winner: JSON.stringify(choice),
-        participants: JSON.stringify(participants), // On passe les participants à l'écran de résultat
+        participants: JSON.stringify(participants),
         wasExplanationVisible: String(wasExplanationVisible)
       } 
     });
